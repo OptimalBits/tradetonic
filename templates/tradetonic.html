@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html 
+      PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"
+      xmlns:svg="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink">
+<head>
+    <link rel="alternate" type="application/rss+xml" title="Tradetonic.com RSS Feed" href="/feeds/latest" />
+
+    <script type="text/javascript" src="svgweb/svg.js"></script>
+    <script type="text/javascript" src="prototype.js"></script>
+    
+    <link rel="stylesheet" href="screen.css" />
+    <link rel="stylesheet" href="960.css" />
+    <title>Trade Tonic</title>
+</head>
+
+<body>
+  <!-- header container -->
+  <div id="header-wrap">
+    <div id="header" class="container_16">		
+					
+		<h1 id="logo-text"><a href="/" title="">Trade Tonic</a></h1>		
+		<p id="intro">Fibonacci levels for traders</p>		
+		
+		<!-- navigation -->
+		<div  id="nav">
+			<ul>
+			<li><a href="http://www.freewebsitetemplates.com">Home</a></li>
+			<li><a href="http://www.freewebsitetemplates.com">Fibonacci Levels</a></li>
+			<li><a href="http://www.freewebsitetemplates.com">Tutorials</a></li>
+			<li><a href="http://www.freewebsitetemplates.com">News &amp; press</a></li>
+			<li><a href="http://www.freewebsitetemplates.com">Contact us</a></li>
+		</ul>
+		</div>
+		
+		<div id="header-image"></div> 
+		
+    </div>
+  </div>
+  <!-- header ends here -->
+	  
+  <div id="content-outer">
+    <div class="container_16" id="content-wrapper">
+        
+        <div class="grid_3">
+        
+        <script LANGUAGE="javascript">
+        <!--
+        function OnChangeQuote(dropdown)
+        {
+            var index  = dropdown.selectedIndex
+            var value = dropdown.options[index].value
+            
+            new Ajax.Request('/quotes/' + value, 
+	                   { 
+	                       onSuccess: function(transport){
+                               //         var response = transport.responseText || "no response text";
+                               //         alert("Success! \n\n" + response);
+                                    },
+                       parameters:{vote:pos, object:id}
+                            }
+                       );
+
+            
+            var baseURL  = <Some value based on SelValue>
+            top.location.href = baseURL;
+            return true;
+        }
+        //-->
+        </script>
+        <script LANGUAGE="javascript">
+        <!--
+        function OnChangeResolution(dropdown)
+        {
+            var index  = dropdown.selectedIndex
+            var value = dropdown.options[index].value
+            
+            new Ajax.Request('/resolution/' + value, 
+	                   { 
+	                       onSuccess: function(transport){
+                               //         var response = transport.responseText || "no response text";
+                               //         alert("Success! \n\n" + response);
+                                    },
+                       parameters:{vote:pos, object:id}
+                            }
+                       );
+
+            
+            var baseURL  = <Some value based on SelValue>
+            top.location.href = baseURL;
+            return true;
+        }
+        //-->
+        </script>
+        <select name=quotes onchange='OnChangeQuote(this.form.quotes);'>
+            <option>OMX30 PI</option>
+            <option>Volvo B</option>
+            <option>Swedbank</option>
+            <option>Swedbank</option>
+            <option>Swedbank</option>
+            <option>Swedbank</option>
+            <option>Swedbank</option>
+        </select>
+        
+        <select name=quotes onchange='OnChangeResolution(this.form.quotes);'>
+            <option>Daily</option>
+            <option>Weekly</option>
+            <option>Monthly</option>
+        </select>
+        
+        <form>
+            T1: <input type="text" name="T1" />
+            <br/>
+            B: <input type="text" name="B" />
+            <br/>
+            T2: <input type="text" name="T2" />
+        </form>
+      
+        </div>
+        
+        <div class="grid_5" id="histogram">
+            Histogram
+            
+            <script type="image/svg+xml">
+  <svg xmlns="http://www.w3.org/2000/svg" 
+       width="200" height="200" 
+       version="1.1" baseProfile="full">
+       <rect x="0" y="0" width="60" height="60" style="stroke: green;"/>
+       <rect x="25" y="25" 
+                 id="myRect" 
+                 rx="0.6" ry="0.6" 
+                 width="150" height="150" 
+                 fill="green" 
+                 stroke="yellow" stroke-width="8"/>
+  </svg>
+</script>            
+        </div>
+
+        <div class="grid_5" id="levels"> 
+                        <script type="image/svg+xml">
+  <svg xmlns="http://www.w3.org/2000/svg" 
+       width="200" height="200" 
+       version="1.1" baseProfile="full">
+       <rect x="0" y="0" width="60" height="60" style="stroke: green;"/>
+       <rect x="25" y="25" 
+                 id="myRect" 
+                 rx="0.6" ry="0.6" 
+                 width="150" height="150" 
+                 fill="green" 
+                 stroke="yellow" stroke-width="8"/>
+  </svg>
+</script> 
+        </div>
+      
+        <div id="left-columns" class="grid_3">
+         	<div class="sidemenu">		
+		      <h3>Recent News</h3>
+			     We added a new fibonacci tool with improved odds support!
+		    </div>
+        </div>
+        
+        <div class="clear"></div> 
+       
+        
+    </div>
+  </div>
+            
+  <div id="footer-bottom">
+	
+    <p class="bottom-left">			
+			<p><a href=http://www.github.com/manast/plunatica>Trade Tonic</a> (c) 2009 - Manuel Astudillo and Johan Stén. Powered by <a href=http://www.djangoproject.com>Django</a> </p>
+			<p>Site design based on <a href=http://www.styleshout.com/templates/preview/KeepItSimple1-0/index.html?PHPSESSID=6270a0d447ad5d2e48aef6b4f6f1ea5a>Keep It Simple</a>,
+    </p>	
+			
+    <p class="bottom-right" >
+	   <!-- <a href="index.html">Sitemap</a> |  -->
+	    <a href="/feeds/latest" class="feed">RSS Feed</a> |
+		<a href="http://jigsaw.w3.org/css-validator/check/referer">CSS</a> | 
+		<a href="http://validator.w3.org/check/referer">XHTML</a>
+	</p>	
+  </div>
+    
+  <div class="grid_16" id="bottombar">
+  </div> 
+   
+</body>
+</html>
+
+
+
+
