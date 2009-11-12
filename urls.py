@@ -4,14 +4,11 @@ from django.conf.urls.defaults import *
 # from django.contrib import admin
 # admin.autodiscover()
 
-urlpatterns = patterns('',
-    # Example:
-    # (r'^tradetonic/', include('tradetonic.foo.urls')),
 
-    # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
-    # to INSTALLED_APPS to enable admin documentation:
-    # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
+urlpatterns = patterns( '',
+    (r'^tradetonic', include ('tradetonic.fibolevels.urls')),
 
-    # Uncomment the next line to enable the admin:
-    # (r'^admin/', include(admin.site.urls)),
+    # Static Media
+   (r'^site_media/(?P<path>.*)$', 'django.views.static.serve',{'document_root': '/Users/manuel/Django-projects/tradetonic/media'})
+    
 )
