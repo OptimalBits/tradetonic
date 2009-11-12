@@ -206,16 +206,17 @@ class FibonacciChart(svg.Svg):
  
         #grid = Grid( b.viewport, 25, 1, p )
         #self.append(grid)
-        
-input = open("goldprice.txt", "rb")
-lines = input.readlines()
-input.close()
 
 quotes = []
 plot = []
 i = 0
+        
+"""
+input = open("goldprice.txt", "rb")
+lines = input.readlines()
+input.close()
 
-#lines.reverse()
+lines.reverse()
 
 for l in lines:
 #	date  = l[:10]
@@ -223,17 +224,36 @@ for l in lines:
 	quotes.append( float(value) )
 	plot.append( (i,float(value)) )	
 	i = i + 1
+"""	
+	
+#quotes.reverse()
 
-t1 = 1360.03
-b  = 1342.53
-t2 = 1353.11
-rl = get_retracements( t1, b, t2 )
+input = open("swedbank.txt", "rb")
+lines = input.readlines()
+input.close()
 
-b = RetracementLevelsChart( "Frequency of LONG reversals (%)", "Gold Bladusir", rl )
+quotes = []
 
-#b = FibonacciChart( "Fibonacci levels", "Gold Bladusir", plot[0:1000], rl )
+for index in range(3,len(lines),8):    
+    value = lines[index].strip()
+    if len(value) > 0:
+        quotes.append(float(value))
 
-f = open ( 'test.svg', 'wb' )
-f.write ( svg.svgdoc(b) )
-f.close()
+#(tbtb, params_tbt) = 
+a = compute_tbtb( quotes )
+tbtb = a[1]
+params_tbt = a[0]
+
+#(btbt, params_btb) 
+b = compute_btbt( quotes )
+btbt = b[1]
+params_btb = b[0]
+
+print params_btb
+print params_tbt
+
+
+
+
+
 
