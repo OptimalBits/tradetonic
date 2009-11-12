@@ -9,11 +9,11 @@
 <head>
     <link rel="alternate" type="application/rss+xml" title="Tradetonic.com RSS Feed" href="/feeds/latest" />
 
-    <script type="text/javascript" src="svgweb/svg.js"></script>
-    <script type="text/javascript" src="prototype.js"></script>
+    <script type="text/javascript" src="site_media/js/svgweb/svg.js"></script>
+    <script type="text/javascript" src="site_media/js/prototype.js"></script>
     
-    <link rel="stylesheet" href="screen.css" />
-    <link rel="stylesheet" href="960.css" />
+    <link rel="stylesheet" href="site_media/css/screen.css" />
+    <link rel="stylesheet" href="site_media/css/960.css" />
     <title>Trade Tonic</title>
 </head>
 
@@ -28,11 +28,11 @@
 		<!-- navigation -->
 		<div  id="nav">
 			<ul>
-			<li><a href="http://www.freewebsitetemplates.com">Home</a></li>
-			<li><a href="http://www.freewebsitetemplates.com">Fibonacci Levels</a></li>
-			<li><a href="http://www.freewebsitetemplates.com">Tutorials</a></li>
-			<li><a href="http://www.freewebsitetemplates.com">News &amp; press</a></li>
-			<li><a href="http://www.freewebsitetemplates.com">Contact us</a></li>
+			<li><a href="/">Home</a></li>
+			<li><a href="/">Fibonacci Levels</a></li>
+			<li><a href="/">Tutorials</a></li>
+			<li><a href="/">News &amp; press</a></li>
+			<li><a href="/">Contact us</a></li>
 		</ul>
 		</div>
 		
@@ -113,55 +113,36 @@
         
         <form>
             T1: <input type="text" name="T1" />
-            <br/>
+            
             B: <input type="text" name="B" />
-            <br/>
+            
             T2: <input type="text" name="T2" />
         </form>
       
         </div>
         
-        <div class="grid_5" id="histogram">
-            Histogram
-            
+        <div class="clear"></div>
+        
+        <div class="grid_7" id="histogram">            
             <script type="image/svg+xml">
-  <svg xmlns="http://www.w3.org/2000/svg" 
-       width="200" height="200" 
-       version="1.1" baseProfile="full">
-       <rect x="0" y="0" width="60" height="60" style="stroke: green;"/>
-       <rect x="25" y="25" 
-                 id="myRect" 
-                 rx="0.6" ry="0.6" 
-                 width="150" height="150" 
-                 fill="green" 
-                 stroke="yellow" stroke-width="8"/>
-  </svg>
-</script>            
+            {{ histochart|safe }}
+            </script>            
         </div>
 
-        <div class="grid_5" id="levels"> 
-                        <script type="image/svg+xml">
-  <svg xmlns="http://www.w3.org/2000/svg" 
-       width="200" height="200" 
-       version="1.1" baseProfile="full">
-       <rect x="0" y="0" width="60" height="60" style="stroke: green;"/>
-       <rect x="25" y="25" 
-                 id="myRect" 
-                 rx="0.6" ry="0.6" 
-                 width="150" height="150" 
-                 fill="green" 
-                 stroke="yellow" stroke-width="8"/>
-  </svg>
-</script> 
+        <div class="grid_9" id="levels"> 
+        <script type="image/svg+xml">
+            {{ levelschart|safe }}
+        </script> 
         </div>
       
+      <!--
         <div id="left-columns" class="grid_3">
          	<div class="sidemenu">		
 		      <h3>Recent News</h3>
 			     We added a new fibonacci tool with improved odds support!
 		    </div>
         </div>
-        
+      -->  
         <div class="clear"></div> 
        
         
