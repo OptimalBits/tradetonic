@@ -6,9 +6,7 @@ from django.conf.urls.defaults import *
 
 
 urlpatterns = patterns( '',
-    (r'^tradetonic', include ('tradetonic.fibolevels.urls')),
-
     # Static Media
-   (r'^site_media/(?P<path>.*)$', 'django.views.static.serve',{'document_root': '/Users/manuel/Django-projects/tradetonic/media'})
-    
+   (r'^site_media/(?P<path>.*)$', 'django.views.static.serve',{'document_root': '/Users/manuel/Django-projects/tradetonic/media'}),
+   (r'^', include ('tradetonic.fibolevels.urls')),
 )
