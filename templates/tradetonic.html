@@ -9,12 +9,38 @@
 <head>
     <link rel="alternate" type="application/rss+xml" title="Tradetonic.com RSS Feed" href="/feeds/latest" />
 
-    <script type="text/javascript" src="site_media/js/svgweb/svg.js"></script>
-    <script type="text/javascript" src="site_media/js/prototype.js"></script>
+    <script type="text/javascript" src="site_media/js/svgweb/svg.js"/>
+    <script type="text/javascript" src="site_media/js/prototype.js"/>
     
-    <link rel="stylesheet" href="site_media/css/screen.css" />
-    <link rel="stylesheet" href="site_media/css/960.css" />
+    <link rel="stylesheet" href="site_media/css/screen.css"/>
+    <link rel="stylesheet" href="site_media/css/960.css"/>
     <title>Trade Tonic</title>
+    
+    <script LANGUAGE="javascript">
+        function OnChangeQuote(dropdown)
+        {
+            var index = dropdown.selectedIndex
+            var value = dropdown.options[index].value
+            
+            new Ajax.Updater('histogram','/quote/' + value, 
+	        { 
+              parameters:{object:value},
+              evalScripts:true,
+            }
+            );
+            
+            new Ajax.Updater('params','/params/' + value, 
+	        { 
+              parameters:{object:value},
+              evalScripts:true,
+            }
+            );
+            
+            
+            return true;
+        }
+    </script>
+
 </head>
 
 <body>
@@ -35,7 +61,6 @@
 			<li><a href="/">Contact us</a></li>
 		</ul>
 		</div>
-		
 		<div id="header-image"></div> 
 		
     </div>
@@ -45,32 +70,8 @@
   <div id="content-outer">
     <div class="container_16" id="content-wrapper">
         
-        <div class="grid_3">
+        <div class="grid_12">
         
-        <script LANGUAGE="javascript">
-        <!--
-        function OnChangeQuote(dropdown)
-        {
-            var index  = dropdown.selectedIndex
-            var value = dropdown.options[index].value
-            
-            new Ajax.Request('/quotes/' + value, 
-	                   { 
-	                       onSuccess: function(transport){
-                               //         var response = transport.responseText || "no response text";
-                               //         alert("Success! \n\n" + response);
-                                    },
-                       parameters:{vote:pos, object:id}
-                            }
-                       );
-
-            
-            var baseURL  = <Some value based on SelValue>
-            top.location.href = baseURL;
-            return true;
-        }
-        //-->
-        </script>
         <script LANGUAGE="javascript">
         <!--
         function OnChangeResolution(dropdown)
@@ -89,20 +90,16 @@
                        );
 
             
-            var baseURL  = <Some value based on SelValue>
+            var baseURL  = ""
             top.location.href = baseURL;
             return true;
         }
         //-->
         </script>
-        <select name=quotes onchange='OnChangeQuote(this.form.quotes);'>
-            <option>OMX30 PI</option>
-            <option>Volvo B</option>
-            <option>Swedbank</option>
-            <option>Swedbank</option>
-            <option>Swedbank</option>
-            <option>Swedbank</option>
-            <option>Swedbank</option>
+        <select name=quotes onchange="javascript: OnChangeQuote(this);">
+            {% for quote in quotes %}
+                <option {% if quote.selected %} selected="yes" {% endif %} value="{{quote.id}}">{{quote.shortName}}</option>
+            {% endfor %}
         </select>
         
         <select name=quotes onchange='OnChangeResolution(this.form.quotes);'>
@@ -110,29 +107,25 @@
             <option>Weekly</option>
             <option>Monthly</option>
         </select>
-        
-        <form>
-            T1: <input type="text" name="T1" />
-            
-            B: <input type="text" name="B" />
-            
-            T2: <input type="text" name="T2" />
+
+        <form id="params">        
+        {% if shortReversal %}
+            {% include "tbt.html" %}
+        {% else %}
+            {% include "btb.html" %}
+        {% endif %}
         </form>
-      
+        
         </div>
         
         <div class="clear"></div>
         
         <div class="grid_7" id="histogram">            
-            <script type="image/svg+xml">
             {{ histochart|safe }}
-            </script>            
         </div>
 
         <div class="grid_9" id="levels"> 
-        <script type="image/svg+xml">
             {{ levelschart|safe }}
-        </script> 
         </div>
       
       <!--
