@@ -65,11 +65,11 @@ def plot( values ):
     
 
 class RetracementLevelsChart(svg.Svg):      
-       def __init__ ( self, title, desc, values ):
+       def __init__ ( self, id, title, desc, values ):
         svg.Svg.__init__(self)
         
         self.setXmlSpace (True)
-        self.setId ("Retracement Levels")
+        self.setId (id)
         self.setXmlLang ("english")
         
         self.width = 1000
@@ -77,6 +77,7 @@ class RetracementLevelsChart(svg.Svg):
                 
         # Frame
         frame = group.Group()
+        frame.setId("feo")
         r = rect.Rect()
         r.x = 0
         r.y = 0
@@ -119,11 +120,11 @@ class RetracementLevelsChart(svg.Svg):
         
         
 class FibonacciChart(svg.Svg):      
-       def __init__ ( self, title, desc, values, levels ):
+       def __init__ ( self, title, desc, values, levels, id = "mysvg" ):
         svg.Svg.__init__(self)
         
         self.setXmlSpace (True)
-        self.setId ("Retracement Levels")
+        self.setId (id)
         self.setXmlLang ("english")
         
         width = 400
@@ -157,12 +158,14 @@ class FibonacciChart(svg.Svg):
         p.fill ="red"
         p.stroke = "black"
         p.stroke_width = 3
-
         
         plot_group = group.Group()
-        plot = Plot( values, p )
+        
+        v = [ (i, values[i] ) for i in range(len(values))]
+        
+        plot = Plot( v, p )
     
-        x, y = zip(*values)
+        x, y = zip(*v)
         
         minx = min(x)
         miny = min(y)
@@ -170,8 +173,8 @@ class FibonacciChart(svg.Svg):
         plot_width = max(x) - minx
         plot_height = max(y) - miny
         
-        print miny
-        print plot_height
+        #print miny
+        #print plot_height
 
         for l in levels:
             fibo_line = Line()
@@ -228,29 +231,25 @@ for l in lines:
 	
 #quotes.reverse()
 
-input = open("swedbank.txt", "rb")
-lines = input.readlines()
-input.close()
+#QUOTE = "swedbank.txt"
+#QUOTE = "lumi.txt"
+#QUOTE = "volvo b.txt"
 
-quotes = []
 
-for index in range(3,len(lines),8):    
-    value = lines[index].strip()
-    if len(value) > 0:
-        quotes.append(float(value))
+def parse_quotes( filename ):
+    input = open(filename, "rb")
+    lines = input.readlines()
+    input.close()
 
-#(tbtb, params_tbt) = 
-a = compute_tbtb( quotes )
-tbtb = a[1]
-params_tbt = a[0]
+    quotes = []
 
-#(btbt, params_btb) 
-b = compute_btbt( quotes )
-btbt = b[1]
-params_btb = b[0]
+    for index in range(3,len(lines),8):    
+        value = lines[index].strip().replace(',','')
+        if len(value) > 0:
+            quotes.append(float(value))
+            
+    return quotes
 
-print params_btb
-print params_tbt
 
 
 
