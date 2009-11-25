@@ -4,6 +4,8 @@ import math
 #
 #
 
+NUM_FIBO_LEVELS = 18
+
 
 def get_fibonacci_level(levels, r):
     
@@ -13,7 +15,7 @@ def get_fibonacci_level(levels, r):
             i = i + 1
         else:
             return i
-
+            
 def get_level(levels, r):
     i = -1
     for l in levels:
@@ -27,7 +29,7 @@ def get_level(levels, r):
 #
 
 def get_histogram(tbtb, t1, b, t2):
-    histogram = [0 for i in range(18)]
+    histogram = [0 for i in range(NUM_FIBO_LEVELS)]
 
     v1 = (t1 - b)
     v2 = (t2 - b)
@@ -41,10 +43,10 @@ def get_histogram(tbtb, t1, b, t2):
         histogram[l[1]] += weight
 
     sum = 0
-    for i in range(18):
+    for i in range(NUM_FIBO_LEVELS):
         sum += histogram[i]
 
-    for i in range(18):
+    for i in range(NUM_FIBO_LEVELS):
         histogram[i] /= sum
 
     return histogram
@@ -76,7 +78,7 @@ def compute_tbtb_old( quotes ):
     phi = 0.5*math.sqrt(5) + 0.5
 
     curr = 0.05
-    for i in range(18):
+    for i in range(NUM_FIBO_LEVELS):
         levels.append(curr)
         curr *= phi
         
@@ -107,18 +109,8 @@ def compute_tbtb_old( quotes ):
             
     return tbtb 
     
-
-def compute_tbtb( quotes ):
-    levels = []
-    phi = 0.5*math.sqrt(5) + 0.5
-
-    curr = 0.05
-    for i in range(18):
-        levels.append(curr)
-        curr *= phi
-        
-    tbtb = list()
-    
+# Implement this as an iterator to be used within compute_tbtb
+def find_tbtb( quotes ):    
     state = 0
     i = 0
     
@@ -148,37 +140,145 @@ def compute_tbtb( quotes ):
                 t2 = val
         elif state == 4:
             if val > b2:
-                v1 = (t1 - b1)
-                v2 = (t2 - b1)
-                theta = math.atan2(v1, v2)
-
-                v3 = (b2 - t2)
-                ratio = v3 / v2
-                fibolevel = get_fibonacci_level(levels, -ratio)
-                tbtb.append((theta, fibolevel))
+                state = 3
+                
+                yield ( t1, b1, t2, b2 )
                 
                 t1 = t2
                 b1 = b2
                 t2 = val
-                state = 3
             else:
                 b2 = val
         
         i = i + 1
-             
-    return ( (t1,b1,t2), tbtb ) 
 
+    if state >= 3:
+        yield ( t1, b1, t2, None )
+    
+def find_last_t1bt2( quotes ):
+    found = False
+    
+    for ( t1, b1, t2, b2 ) in find_tbtb( quotes ):
+        found = True
+        pass
+    
+    if found:
+        return ( t1, b1, t2 )
+    else:
+        return None
+    
+    
+def find_btbt( quotes ):
+    state = 0
+    i = 0
+    
+    while i < len(quotes):
+        val = quotes[i]
+        
+        if state == 0:
+            b1 = val
+            state = 1
+        elif state == 1:
+            if val > b1:
+                t1 = val
+                state = 2
+            else:
+                b1 = val    
+        elif state == 2:
+            if val < t1:
+                b2 = val
+                state = 3
+            else:
+                t1 = val
+        elif state == 3:
+            if val > b2:
+                t2 = val
+                state = 4
+            else:
+                b2 = val
+        elif state == 4:
+            if val < t2:
+                state = 3
+                
+                yield ( b1, t1, b2, t2 )
+                
+                b1 = b2
+                t1 = t2
+                b2 = val
+                
+            else:
+                t2 = val
+        
+        i = i + 1
+    
+    if state >= 3:
+        yield (  b1, t1, b2, None )
+        
+def find_last_b1tb2( quotes ):
+    found = False
+    
+    for ( b1, t1, b2, t2 ) in find_btbt( quotes ):
+        found = True
+        pass
+    
+    if found:
+        return ( b1, t1, b2 )
+    else:
+        return None
+        
+
+def compute_tbtb( quotes ):
+    levels = []
+    phi = 0.5*math.sqrt(5) + 0.5
+
+    curr = 0.05
+    for i in range(NUM_FIBO_LEVELS):
+        levels.append(curr)
+        curr *= phi
+        
+    tbtb = list()
+    
+    for (t1,b1,t2,b2) in find_tbtb( quotes ):
+        if b2 != None:
+            v1 = (t1 - b1)
+            v2 = (t2 - b1)
+            theta = math.atan2(v1, v2)
+
+            v3 = (b2 - t2)
+            ratio = v3 / v2
+            fibolevel = get_fibonacci_level(levels, -ratio)
+            tbtb.append((theta, fibolevel))
+
+    return tbtb
+           
+    
 def compute_btbt( quotes ):
     levels = []
     phi = 0.5*math.sqrt(5) + 0.5
 
     curr = 0.05
-    for i in range(18):
+    for i in range(NUM_FIBO_LEVELS):
         levels.append(curr)
         curr *= phi
 
     btbt = list()
     
+    for (b1,t1,b2,t2) in find_btbt( quotes ):
+        if t2 != None:
+            v1 = (b1 - t1)
+            v2 = (b2 - t1)
+            theta = math.atan2(v1, v2)
+
+            v3 = (t2 - b2)
+            ratio = v3 / v2
+            
+            if -ratio < 467:
+                fibolevel = get_fibonacci_level(levels, -ratio)
+            btbt.append((theta, fibolevel))
+            
+    return btbt
+
+    """
     state = 0
     i = 0
     
@@ -227,6 +327,7 @@ def compute_btbt( quotes ):
         i = i + 1
                     
     return ( (b1, t1, b2), btbt )
+    """
     
 #
 #
@@ -272,7 +373,7 @@ t2 = 1353.11
 histogram = get_histogram(t1, b, t2)
 
 sum = 0
-for i in range(18):
+for i in range(NUM_FIBO_LEVELS):
 	sum += histogram[i]
 	print "%.2f: %.2f%%\t(%.2f%%)" %(t2 - (t2 - b) * levels[i], 100*histogram[i], 100*sum)
 
