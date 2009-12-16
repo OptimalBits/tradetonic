@@ -1,0 +1,22 @@
+
+
+#loading
+{
+    background:url("/site_media/gif/loading.gif") no-repeat center;
+    width:400px;
+    height:100px;
+}
+
+#loading2
+{
+    background:url("/site_media/gif/loading.gif") no-repeat center;
+    width:40px;
+    height:10px;
+}
+
+input
+{
+color: #781351;
+background: #fee3ad;
+width:5em;
+}

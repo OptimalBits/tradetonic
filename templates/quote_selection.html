@@ -1,0 +1,5 @@
+<select id="quote_list" name=quotes onchange="javascript: OnChangeQuote(this);">
+{% for quote in quotes %}
+<option {% if quote.selected %} selected="yes" {% endif %} value="{{quote.id}}">{{quote.shortName}}</option>
+{% endfor %}
+</select>

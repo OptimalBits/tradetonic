@@ -9,48 +9,97 @@
 <head>
     <link rel="alternate" type="application/rss+xml" title="Tradetonic.com RSS Feed" href="/feeds/latest" />
 
-    <script type="text/javascript" src="site_media/js/svgweb/svg.js"/>
-    <script type="text/javascript" src="site_media/js/prototype.js"/>
-    
     <link rel="stylesheet" href="site_media/css/screen.css"/>
     <link rel="stylesheet" href="site_media/css/960.css"/>
+    <link rel="stylesheet" href="site_media/css/tradetonic.css"/>
+ 
+    <script type="text/javascript" src="site_media/js/prototype.js"/>
+    <script type="text/javascript" src="site_media/js/svgweb/svg.js"/>
+   
     <title>Trade Tonic</title>
     
     <script LANGUAGE="javascript">
+        function updateQuoteDropList(value)
+        {
+            $('quotes').update('<div id="loading2"/>');
+            new Ajax.Updater('quotes','/menus/quotes/' + value, 
+	        { 
+              parameters:{object:value},
+              evalScripts:true,
+              onComplete:function(transport)
+              {
+                updateChart($('quote_list').value, $('resolution').value);      
+              }
+            }
+            );
+        }
+    
+        function updateChart(value, resolution)
+        {
+            $('histogram').update('<div id="loading"/>');
+            $('params').update('<div id="loading"/>');
+            $('levels').update('<div id="loading"/>');
+            
+            new Ajax.Updater('histogram','/quote/' + value + '/' + resolution, 
+	        { 
+              parameters:{object:value},
+              evalScripts:true,
+              onComplete:function(transport){}
+            }
+            );
+            
+            new Ajax.Updater('levels','/levels/' + value + '/' + resolution, 
+	        { 
+              parameters:{object:value},
+              evalScripts:true,
+              onComplete:function(transport){}
+            }
+            );
+            
+            new Ajax.Updater('params','/params/' + value + '/' + resolution, 
+	        { 
+              parameters:{object:value},
+              evalScripts:true,
+            }
+            );
+        }
+        
         function OnChangeQuote(dropdown)
         {
-            var index = dropdown.selectedIndex
-            var value = dropdown.options[index].value
-            
-            new Ajax.Updater('histogram','/quote/' + value, 
-	        { 
-              parameters:{object:value},
-              evalScripts:true,
-            }
-            );
-            
-            new Ajax.Updater('params','/params/' + value, 
-	        { 
-              parameters:{object:value},
-              evalScripts:true,
-            }
-            );
-            
+            updateChart(dropdown.value, $('resolution').value );
             
             return true;
         }
+               
+        function OnChangeType(dropdown)
+        {            
+            updateQuoteDropList(dropdown.value);
+            
+            return true;
+        }
+        
+        function OnChangeResolution(dropdown)
+        {
+            updateChart($('quote_list').value, dropdown.value);   
+        }
     </script>
-
 </head>
 
 <body>
-  <!-- header container -->
+<script LANGUAGE="javascript">
+        <!--
+        Event.observe(window,'load', function() 
+        {   
+            updateQuoteDropList('SHARES');
+        });        
+        //-->
+</script>
+        
+  <!-- header container -->  
   <div id="header-wrap">
-    <div id="header" class="container_16">		
-					
+    <div id="header" class="container_16">	
 		<h1 id="logo-text"><a href="/" title="">Trade Tonic</a></h1>		
-		<p id="intro">Fibonacci levels for traders</p>		
-		
+		<p id="intro">Fibonacci levels for traders</p>
 		<!-- navigation -->
 		<div  id="nav">
 			<ul>
@@ -62,83 +111,52 @@
 		</ul>
 		</div>
 		<div id="header-image"></div> 
-		
     </div>
   </div>
   <!-- header ends here -->
 	  
   <div id="content-outer">
-    <div class="container_16" id="content-wrapper">
-        
-        <div class="grid_12">
-        
-        <script LANGUAGE="javascript">
-        <!--
-        function OnChangeResolution(dropdown)
-        {
-            var index  = dropdown.selectedIndex
-            var value = dropdown.options[index].value
-            
-            new Ajax.Request('/resolution/' + value, 
-	                   { 
-	                       onSuccess: function(transport){
-                               //         var response = transport.responseText || "no response text";
-                               //         alert("Success! \n\n" + response);
-                                    },
-                       parameters:{vote:pos, object:id}
-                            }
-                       );
-
-            
-            var baseURL  = ""
-            top.location.href = baseURL;
-            return true;
-        }
-        //-->
-        </script>
-        <select name=quotes onchange="javascript: OnChangeQuote(this);">
-            {% for quote in quotes %}
-                <option {% if quote.selected %} selected="yes" {% endif %} value="{{quote.id}}">{{quote.shortName}}</option>
-            {% endfor %}
-        </select>
-        
-        <select name=quotes onchange='OnChangeResolution(this.form.quotes);'>
-            <option>Daily</option>
-            <option>Weekly</option>
-            <option>Monthly</option>
+    <div class="container_16" id="content-wrapper">    
+        <select name=quote_type onchange="javascript: OnChangeType(this);">
+            <option value="SHARES">Shares</option>
+            <option value="INDEXES">Indexes</option>
         </select>
 
-        <form id="params">        
-        {% if shortReversal %}
-            {% include "tbt.html" %}
-        {% else %}
-            {% include "btb.html" %}
-        {% endif %}
-        </form>
+        <span id="quotes">        
+        <!-- Quotes selector holder -->
+        </span>
         
+        <div id="params"/>
+        <!-- Parameters holder -->
         </div>
         
+        Current Odds of reversal: 
         <div class="clear"></div>
         
-        <div class="grid_7" id="histogram">            
-            {{ histochart|safe }}
+        <div class="grid_7" id="histogram">
+        <!-- Histogram holder -->
         </div>
-
-        <div class="grid_9" id="levels"> 
-            {{ levelschart|safe }}
+        
+        <div class="grid_7" id="levels">
+        <!-- Levels holder -->
         </div>
-      
-      <!--
-        <div id="left-columns" class="grid_3">
+                
+        <div id="left-columns" class="grid_2">
          	<div class="sidemenu">		
 		      <h3>Recent News</h3>
 			     We added a new fibonacci tool with improved odds support!
 		    </div>
         </div>
-      -->  
-        <div class="clear"></div> 
-       
         
+        <div class="clear"></div>
+        
+        Resolution: 
+        <select id="resolution" name=resolution onchange='OnChangeResolution(this);'>
+            <option value=1>Daily</option>
+            <option value=5>Weekly</option>
+            <option value=20>Monthly</option>
+        </select>
+
     </div>
   </div>
             
