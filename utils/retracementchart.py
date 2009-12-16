@@ -6,9 +6,12 @@ from text import *
 from pygraph import *
 from retracement import *
 from line import *
+from decimal import Decimal
+
+NUM_DAYS = 40
 
 def bars( values ):
-    from decimal import Decimal
+    
     from copy import copy
     g = group.Group()
     
@@ -38,30 +41,30 @@ def bars( values ):
         probability = Decimal(str(t[1])).quantize(Decimal('1.00'))
 
         label = text.Text(str(probability) )
-        label.translate( t[1] * 10 + 80, T + 5)
+        label.translate( t[1] * 10 + 80, T + r.width / 2)
         
         g.append( label )
         
         bar = copy(r)
-        bar.translate( 70, T )
+        bar.translate( 70, T - r.width / 2)
         bar.scale( t[1], 1 )
         g.append( bar )
         T = T + 20
    
     p = Paint ()
-    p.fill ="red"
     p.stroke = "black"
-    p.stroke_width = 2
+    p.stroke_width = 1
         
     axisx = AxisX ( (70, T), height * 1.10, 2*10, p )
     axisy = AxisY ( (70, T), len(values) * 20, 20, p )
     g.append( axisx )
     g.append( axisy )
+    
+    #grid = Grid( b.viewport, 25, 1, p )
+    
+    #g.append(grid)
+    
     return g
-    
-    
-def plot( values ):
-    pass
     
 
 class RetracementLevelsChart(svg.Svg):      
@@ -72,8 +75,11 @@ class RetracementLevelsChart(svg.Svg):
         self.setId (id)
         self.setXmlLang ("english")
         
-        self.width = 1000
-        self.height = 1000
+      #  self.width = 1000
+      #  self.height = 1000
+        
+        width = 320
+        height = 300
                 
         # Frame
         frame = group.Group()
@@ -81,14 +87,13 @@ class RetracementLevelsChart(svg.Svg):
         r = rect.Rect()
         r.x = 0
         r.y = 0
-        r.width = 400
-        r.height = 450
+        r.width = width * 1.3
+        r.height = height * 1.3
         r.rx = 20
         r.stroke = "grey"
-        r.stroke_width = 2
+        r.stroke_width = 1
         r.fill = "none"
         frame.append( r )
-        frame.translate ( 50, 50 )
         self.append( frame )
  
         # Chart       
@@ -114,38 +119,30 @@ class RetracementLevelsChart(svg.Svg):
         chart.append( desc_text )
         
         chart.append( bars( values ) )
- 
-        #grid = Grid( b.viewport, 25, 1, p )
-        #self.append(grid)
-        
-        
+         
 class FibonacciChart(svg.Svg):      
-       def __init__ ( self, title, desc, values, levels, id = "mysvg" ):
+       def __init__ ( self, title, desc, values, levels, resolution = 1 ):
         svg.Svg.__init__(self)
         
         self.setXmlSpace (True)
-        self.setId (id)
+#        self.setId (id)
         self.setXmlLang ("english")
         
-        width = 400
-        height = 400
-        
-    #    self.width = 1000
-    #    self.height = 1000
+        width = 320
+        height = 300
                 
         # Frame
         frame = group.Group()
         r = rect.Rect()
         r.x = 0
         r.y = 0
-        r.width = width * 1.2
-        r.height = height * 1.2
+        r.width = width * 1.3
+        r.height = height * 1.3
         r.rx = 20
         r.stroke = "grey"
-        r.stroke_width = 2
+        r.stroke_width = 1
         r.fill = "none"
         frame.append( r )
-        frame.translate ( 50, 50 )
         self.append( frame )
  
         # Chart       
@@ -155,45 +152,72 @@ class FibonacciChart(svg.Svg):
         
         # Plot
         p = Paint ()
-        p.fill ="red"
         p.stroke = "black"
-        p.stroke_width = 3
+        p.stroke_width = 1
         
-        plot_group = group.Group()
+        import datetime
+        today = datetime.date.today()
+        one_year_ago = today - datetime.timedelta( days = NUM_DAYS*resolution )
         
-        v = [ (i, values[i] ) for i in range(len(values))]
+        vavlues = values.samplePrices( resolution )
+        prices = values.getClosePrices(one_year_ago, today)
+        min_price = min(prices)
+        max_price = max(prices)
+        
+        print prices[-1]
+        
+        scaley = height / ( max_price - min_price )
+        scalex = float(width) / float(len(prices))
+        
+        v = [ (i*scalex, ((prices[i]-min_price)*scaley)-height ) for i in range(len(prices))]
+        
         
         plot = Plot( v, p )
-    
-        x, y = zip(*v)
-        
-        minx = min(x)
-        miny = min(y)
-       
-        plot_width = max(x) - minx
-        plot_height = max(y) - miny
-        
-        #print miny
-        #print plot_height
 
+        toggle = True
+
+        prob = 0
+        xpos = 10
+        startColor = (0,255,0)
+        endColor = (255, 0, 0)
         for l in levels:
-            fibo_line = Line()
-            fibo_line.x1 = 0
-            fibo_line.x2 = plot_width
-            fibo_line.y1 = l[0]
-            fibo_line.y2 = l[0]
-            plot.append( fibo_line )
+            if l[0] > 0:
+                prob += l[1]
+                
+                if l[0] > prices[-1]:
+                    continue
+                    
+                if prob > 5 and prob < 99:
+                    fibo_line = Line()
+                    fibo_line.x1 = 0
+                    fibo_line.x2 = len(prices)*scalex
+                    fibo_line.y1 = ((l[0]-float(min_price))*float(scaley))-height
+                    fibo_line.y2 = ((l[0]-float(min_price))*float(scaley))-height
+                    fibo_line.stroke = interpColor( startColor, endColor, prob )
+                    fibo_line.stroke_width = "0.8"
+                    
+                    plot.append( fibo_line )
+                    
+                    fprob = Decimal(str(prob)).quantize(Decimal("1.0"))
+                    fibo_prob = text.Text( str(fprob) + "%")     
+                    fibo_prob.font_size = "50%"
+                    fibo_prob.font_family= "Verdana"
+                    fibo_prob.stroke = fibo_line.stroke
+                    fibo_prob.stroke_width = "0.5"                         
+                    
+                    ypos = fibo_line.y1 * 0.99
+                    
+                    fibo_prob.scale(1,-1)
+                    plot.append( Label(fibo_prob,(xpos,ypos),0) )
+                    
+                    xpos += 30
         
 
-        scalex = float(width) / float(plot_width)
-        scaley = float(height) / float(plot_height)
         
-        plot_group.scale( scalex, scaley )
-        plot.translate( 0, -miny )
-        
-        plot_group.append(plot)
+        plot.scale( 1, -1)
+     
 
-        chart.append( plot_group )   
+        chart.append( plot )   
     
         title_text = text.Text( title )
         title_text.translate ( 50, -30 )
@@ -204,54 +228,85 @@ class FibonacciChart(svg.Svg):
         desc_text.translate(105, -15 )
         chart.append( desc_text )
         
-    
-        #chart.append( bars( values ) )
- 
-        #grid = Grid( b.viewport, 25, 1, p )
-        #self.append(grid)
-
-quotes = []
-plot = []
-i = 0
+        # Generate X Axis
+        month_strings = generateMonthlyStrings( one_year_ago, today )
         
-"""
-input = open("goldprice.txt", "rb")
-lines = input.readlines()
-input.close()
+        if len(month_strings) > 1:
+            date_tick = width / (len( month_strings ) - 1)
+        else:
+            date_tick = width
+        
+        axisx = AxisX ( (0, height), width, date_tick, p )
+        
+        coords = [ -15, 27 ]
+        for label in month_strings:
+            label.font_size = "75%"
+            l = Label(label, coords, -35 )
+            axisx.append(l)
+            coords[0] += date_tick
+        chart.append( axisx )
+        
+        # Generate Y Axis
+        NUM_TICKS = 7
+        price_len = float(max_price - min_price)
 
-lines.reverse()
+        price_tick = height / NUM_TICKS
+        price_inc = price_len / NUM_TICKS
+        
+        #axisy = AxisY ( (0, height), height, price_tick, p )
+        
+        axisy = group.Group()
+        
+        y_line = line.Line()
+        
+        y_line.x1 = 0
+        y_line.y1 = height
+        y_line.x2 = 0
+        y_line.y2 = 0
+        y_line.stroke = "green"
+        y_line.stroke_width = 1
+        
+        axisy.append(y_line)
+        
+        coords = [-40, height]
+        
+        price_tick = Decimal(str(price_tick)).quantize(Decimal('1.0'))
+        price_tick = float(price_tick)
 
-for l in lines:
-#	date  = l[:10]
-	value = l[11:-2]
-	quotes.append( float(value) )
-	plot.append( (i,float(value)) )	
-	i = i + 1
-"""	
-	
-#quotes.reverse()
+        price_inc = Decimal(str(price_inc)).quantize(Decimal('1.0'))
 
-#QUOTE = "swedbank.txt"
-#QUOTE = "lumi.txt"
-#QUOTE = "volvo b.txt"
+        p = min_price
+        for r in range(0,NUM_TICKS+1 ):
+            d = Decimal(p).quantize(Decimal('1.00'))
+        
+            t = text.Text(str(d))
+            t.font_size = "75%"
+            l = Label( t, coords, 0 )
+            axisy.append(l)
+            coords[1] -= price_tick
+            p += price_inc
+        
+        chart.append( axisy )
+ 
+        p = Paint ()
+        p.stroke = "black"
+        p.stroke_width = 0.2
+        p.stroke_dasharray = "3"
+        
+        grid = Grid( Viewport(0,0,width,height), date_tick, price_tick, p )
+        
+        chart.append(grid)
+       
 
-
-def parse_quotes( filename ):
-    input = open(filename, "rb")
-    lines = input.readlines()
-    input.close()
-
-    quotes = []
-
-    for index in range(3,len(lines),8):    
-        value = lines[index].strip().replace(',','')
-        if len(value) > 0:
-            quotes.append(float(value))
-            
-    return quotes
-
-
-
+def interpColor( startColor, endColor, prob ):
+    t = prob / 100.0
+    a = startColor[0] * ( 1 - t ) + endColor[0] * t
+    b = startColor[1] * ( 1 - t ) + endColor[1] * t
+    c = startColor[2] * ( 1 - t ) + endColor[2] * t
+    
+    return "#%02x%02x%02x" % (a,b,c)
+    
+ 
 
 
 
