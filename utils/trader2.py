@@ -4,19 +4,20 @@
 #
 
 from retracement import *
+from nasdaq_fetcher import *
 
 MIN_EARNING = 0
 MAX_ENTER_ODDS = 30
-MIN_EXIT_ODDS = 65
+MIN_EXIT_ODDS = 100
 
 MAX_LONG_ODDS = 10
 MAX_SHORT_ODDS = 10
 
-ENTER_TRADE_ODDS = 5
-EXIT_TRADE_ODDS = 90
+ENTER_TRADE_ODDS = 20
+EXIT_TRADE_ODDS = 80
 
-MAX_LOSS = -2
-NUM_DAYS = 100
+MAX_LOSS = -0.1
+NUM_DAYS = 1000
 
 class Trader(object):
     def __init__(self, cash, courtage):
@@ -189,70 +190,59 @@ def takeShortProfits( current_price, trader ):
 trader = Trader(100000, 100)
         
 # Simulate trading.
-QUOTE = "../swedbank.txt"
-QUOTE = "../lumi.txt"
-#QUOTE = "../omx30.txt"
-QUOTE = "../volvo b.txt"
+QUOTE = 'SSE101'
+QUOTE2 = 'SSE366'
+OMXC20 = 'CSEDX0000001376'
+OMXS30 = 'SSESE0000337842'
 
-input = open(QUOTE, "rb")
-lines = input.readlines()
-input.close()
 
-quotes = []
+quote_proxy = QuoteProxy( 'quote_cache' )
+ticks = quote_proxy.getTicks( OMXS30 )
+   
+quotes = [ float(r) for r in ticks.getClosePrices() ]
 
-for index in range(3,len(lines),8):    
-    value = lines[index].strip().replace(',','')
-    if len(value) > 0:
-        quotes.append(float(value))
-        
+a = QuoteAnalysis(16, quotes)
+#rl = a.get_retracements( *a.last_pattern )
+
 going_up = False
-
-#quotes = quotes[0:NUM_DAYS]
-
-tbtb = compute_tbtb( quotes )
-btbt = compute_btbt( quotes )
 
 
 # simulate trading
+"""
 for i in range(NUM_DAYS,0,-1):   
     new_quotes = quotes[:-i]
 
-    tbt = find_last_t1bt2( new_quotes )
-    btb = find_last_b1tb2( new_quotes )
+    points = find_last_pattern( new_quotes )
     
-    if tbt == None and btb == None:
+    if points == None:
         continue
     
     current_price = new_quotes[-1:][0]
- 
-    if tbt != None:
-        if tbt[2] == current_price:
-            if going_up == False:
-                reversal = True     
-            else:
-                reversal = False
-            going_up = True
-        
-    if btb != None:
-        if btb[2] == current_price:
-            if going_up == True:
-                reversal = True
-            else:
-                reversal = False
-            going_up = False
+    
+    if points[0] < points[1]:
+        if going_up == False:
+            reversal = True
+        else:
+            reversal = False
+        going_up = True
+            
+    if points[0] > points[1]:
+        if going_up == True:
+            reversal = True
+        else:
+            reversal = False
+        going_up = False
  
     if trader.stock != 0:
         if trader.stock > 0:
             if going_up:
                 
-                rl = get_retracements( btbt, btb[0], btb[1], btb[2] )
-           
+                rl = a.get_retracements( *points )
                 odds = findOdds( current_price, rl )
            
                 if odds > MIN_EXIT_ODDS:
                     trader.sell_all( current_price )
                 
-                 
                 trader.top_price = max( trader.top_price, current_price )
             else:
                 # Sell if loss > MAX_LOSS from top_price
@@ -262,8 +252,8 @@ for i in range(NUM_DAYS,0,-1):
                     trader.sell_all( current_price )
         else:
             if not going_up:
-                """
-                rl = get_retracements( tbtb, tbt[0], tbt[1], tbt[2] )
+                
+                rl = a.get_retracements( points )
                 
                 odds = findOdds( current_price, rl )
                     
@@ -272,7 +262,7 @@ for i in range(NUM_DAYS,0,-1):
                     print "ENTERD LONG TRADE HOPING REVERSAL WITH ODDS: " + str(odds)
                     trader.buy_all( current_price )
                     trader.top_price = current_price
-                """
+                
                 trader.bottom_price = min( trader.bottom_price, current_price )
             else:
                 # Buy if loss > MAX_LOSS from top_price
@@ -284,7 +274,7 @@ for i in range(NUM_DAYS,0,-1):
                 
     if trader.stock == 0:
         if going_up:
-            rl = get_retracements( btbt, btb[0], btb[1], btb[2] ) 
+            rl = a.get_retracements( *points ) 
             odds = findOdds( current_price, rl )
                         
             if odds < ENTER_TRADE_ODDS:
@@ -298,9 +288,9 @@ for i in range(NUM_DAYS,0,-1):
                 trader.short_all( current_price )
                 trader.bottom_price = current_price
                  
-        elif tbt != None:
+        elif points != None:
            
-            rl = get_retracements( tbtb, tbt[0], tbt[1], tbt[2] ) 
+            rl = a.get_retracements( *points ) 
             odds = findOdds( current_price, rl )
              
             if odds > EXIT_TRADE_ODDS:
@@ -317,10 +307,105 @@ for i in range(NUM_DAYS,0,-1):
 
   
 print "Final Amount: " + str(trader.market_value(current_price))
+"""        
         
         
-        
-        
+# simulate trading
+for i in range(NUM_DAYS,0,-1):   
+    new_quotes = quotes[:-i]
+
+    points = find_last_pattern( new_quotes )
+    
+    if points == None:
+        continue
+    
+    current_price = points[3]
+    
+    if points[0] < points[1]:
+        if going_up == False:
+            reversal = True
+        else:
+            reversal = False
+        going_up = True
+            
+    if points[0] > points[1]:
+        if going_up == True:
+            reversal = True
+        else:
+            reversal = False
+        going_up = False
+ 
+    if trader.stock != 0:
+        if trader.stock > 0:
+            if going_up:  
+                rl = a.get_retracements( *points )
+                odds = findOdds( current_price, rl )
+           
+                if odds > MIN_EXIT_ODDS:
+                    trader.sell_all( current_price )
+                
+                trader.top_price = max( trader.top_price, current_price )
+            else:
+                # Sell if loss > MAX_LOSS from top_price
+                earning = calcEarning( trader.top_price, current_price )
+                if earning < MAX_LOSS:
+                    print "TAKING A LOSS: " + str(earning)
+                    trader.sell_all( current_price )
+        else:
+            if not going_up:
+                rl = a.get_retracements( *points )
+                odds = findOdds( current_price, rl )
+                    
+                if odds > MIN_EXIT_ODDS:
+                    print "EXIT SHORT TRADE"
+                    print "ENTERED LONG TRADE HOPING REVERSAL WITH ODDS: " + str(odds)
+                    trader.buy_all( current_price )
+                    trader.top_price = current_price
+                
+                trader.bottom_price = min( trader.bottom_price, current_price )
+            else:
+                # Buy if loss > MAX_LOSS from top_price
+                earning = calcEarning( current_price, trader.bottom_price )
+                if earning < MAX_LOSS:
+                    print "TAKING A LOSS: " + str(earning)
+                    trader.buy_all( current_price )
+                    trader.top_price = current_price
+                
+    if trader.stock == 0:
+        if going_up:
+            rl = a.get_retracements( *points ) 
+            odds = findOdds( current_price, rl )
+                        
+            if odds < ENTER_TRADE_ODDS:
+                print "ENTER A LONG TRADE WITH ODDS: " + str(odds)
+            
+                trader.buy_all( current_price )
+                trader.top_price = current_price
+            """  
+            elif odds > EXIT_TRADE_ODDS:
+                print "ENTER A SHORT TRADE HOPING REVERSAL WITH ODDS: " + str(odds)
+                trader.short_all( current_price )
+                trader.bottom_price = current_price
+            """    
+        elif points != None:
+           
+            rl = a.get_retracements( *points ) 
+            odds = findOdds( current_price, rl )
+            """ 
+            if odds > EXIT_TRADE_ODDS:
+                print "ENTER A LONG TRADE HOPING REVERSAL WITH ODDS: " + str(odds)
+            
+                trader.buy_all( current_price )
+                trader.top_price = current_price
+            """
+            if odds < ENTER_TRADE_ODDS:
+                print "ENTER A SHORT TRADE WITH ODDS: " + str(odds)
+            
+                trader.short_all( current_price )
+                trader.bottom_price = current_price
+
+  
+print "Final Amount: " + str(trader.market_value(current_price))    
        
 
 
