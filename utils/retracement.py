@@ -4,10 +4,141 @@ import math
 #
 #
 
-NUM_FIBO_LEVELS = 18
+NUM_FIBO_LEVELS = 16
+
+fibolevels = [ 0.05, 0.0903, 0.1458, 0.236, 0.382, 0.5, 0.618, 0.786, 1, 1.618, 2.618, 4.235, 6.857, 11.077, 18, 28 ]
+
+#
+# Represents the analysis of a quote that can be used to retrieve 
+# the retracement levels
+#
+class QuoteAnalysis(object):
+    def __init__( self, numFiboLevels, quotes ):
+        self.numfiboLevels = numFiboLevels
+        self.quotes = quotes
+        
+        self.levels = fibolevels
+        
+        self.transform2()
+        
+    def transform( self ):             
+        self.tbtb = list()
+        self.btbt = list()
+    
+        for (p1,p2,p3,p4) in find_pattern( self.quotes ):
+            if p4 != None:
+                v1 = (p1 - p2)
+                v2 = (p3 - p2)
+                theta = math.atan2(v1, v2)
+
+                v3 = (p4 - p3)
+                ratio = v3 / v2
+                
+                fibolevel = quantize_level(self.levels, -ratio)
+                
+                if p3 > p4:
+                    self.tbtb.append((theta, fibolevel))
+                else:
+                    self.btbt.append((theta, fibolevel))
+        self.last_pattern = ( p1, p2, p3, p4 )
+        
+    def transform2( self ):             
+        self.tbtb = list()
+        self.btbt = list()
+        self.data = list()
+    
+        for (p1,p2,p3,p4) in find_pattern( self.quotes ):
+            if p4 != None:
+                v1 = (p1 - p2)
+                v2 = (p3 - p2)
+
+                in_ratio = v2 / v1
+
+                v3 = (p4 - p3)
+                out_ratio = v3 / v2
+                               
+                in_level = quantize_level(self.levels, in_ratio)
+                out_level = quantize_level(self.levels, -out_ratio)
+               
+                self.data.append((in_level, out_level))
+                if p1 > p2:
+                    self.tbtb.append((in_level, out_level))
+                else:
+                    self.btbt.append((in_level, out_level))
+        self.last_pattern = ( p1, p2, p3, p4 )
+        
+    def get_histogram2(self, p1, p2, p3):
+        histogram = [0 for i in range(self.numfiboLevels)]
+
+        v1 = (p1 - p2)
+        v2 = (p3 - p2)
+        in_ratio = v2 / v1
+        in_level = quantize_level(self.levels, in_ratio)
+
+        if p1 > p2:
+            data = self.tbtb
+        else:
+            data = self.btbt
+            
+     #   data = self.data
+
+        for l in data:
+            if l[0] == in_level and l[1] != None:
+                histogram[l[1]] += 1
+
+        s = float(sum(histogram))
+
+        if s > 0:
+            for i in range(self.numfiboLevels):
+                histogram[i] /= s
+
+        return histogram
+
+                    
+    def get_histogram(self, p1, p2, p3):
+        histogram = [0 for i in range(self.numfiboLevels)]
+
+        v1 = (p1 - p2)
+        v2 = (p3 - p2)
+        theta = math.atan2(v1, v2)
+
+        if p1 > p2:
+            data = self.tbtb
+        else:
+            data = self.btbt
+
+        for l in data:
+            angle = l[0] - theta
+
+            cos = max(math.cos(angle), 0)
+            weight = math.pow(cos, 256)
+            if l[1] != None:
+                histogram[l[1]] += weight
+
+        sum = 0
+        for i in range(self.numfiboLevels):
+            sum += histogram[i]
+
+        for i in range(self.numfiboLevels):
+            histogram[i] /= sum
+
+        return histogram
+        
+    def get_retracements( self, p1, p2, p3, p4 = None ):
+        histogram = self.get_histogram2( p1, p2, p3)
+        
+        v = ( p3 - p2 )
+        
+        rl = [ (p3 - v * self.levels[i], 100 * histogram[i]) for i in range(len(self.levels)) ]
+    
+        return rl
+        
+    def isGoingLong( self ):
+        return self.last_pattern[2] < self.last_pattern[3]
 
 
-def get_fibonacci_level(levels, r):
+"""
+def quantize_level(levels, r):
     
     i = 0
     for l in levels:
@@ -15,370 +146,85 @@ def get_fibonacci_level(levels, r):
             i = i + 1
         else:
             return i
-            
-def get_level(levels, r):
-    i = -1
+
+"""
+def quantize_level(levels, r):
+    i = 0
     for l in levels:
-        if (r < l):
+        if r > l:
             i += 1
+        elif i > 0:
+            d1 = levels[i-1] - r
+            d2 = r - l
+            
+            if d1 < d2:
+                return i
+            else:
+                return i-1
+        else:
+            return i
+
+#
+#
+#
+    
+def find_pattern( quotes ):    
+    state = 0
+    i = 0
+    
+    while i < len(quotes):
+        val = quotes[i]
+        
+        if state == 0:
+            p1 = val
+            state = 1
+            
+        elif state == 1:
+            p2 = val
+            state = 2
+                
+        elif state == 2:
+            if ( p1 < p2 and val < p2 ) or ( p1 > p2 and val > p2 ): 
+                p3 = val
+                state = 3
+            else:
+                p2 = val
+                
+        elif state == 3:
+            if ( p2 < p3 and val < p3 ) or ( p2 > p3 and val > p3 ):
+                p4 = val
+                state = 4
+            else:
+                p3 = val
+                
+        elif state == 4:
+            if (p3 < p4 and val < p4) or (p3 > p4 and val > p4):
+                yield ( p1, p2, p3, p4 )
                    
-    return i
-
-#
-#
-#
-
-def get_histogram(tbtb, t1, b, t2):
-    histogram = [0 for i in range(NUM_FIBO_LEVELS)]
-
-    v1 = (t1 - b)
-    v2 = (t2 - b)
-    theta = math.atan2(v1, v2)
-
-    for l in tbtb:
-        angle = l[0] - theta
-
-        cos = max(math.cos(angle), 0)
-        weight = math.pow(cos, 256)
-        histogram[l[1]] += weight
-
-    sum = 0
-    for i in range(NUM_FIBO_LEVELS):
-        sum += histogram[i]
-
-    for i in range(NUM_FIBO_LEVELS):
-        histogram[i] /= sum
-
-    return histogram
-	
-	
-def get_retracements( tbtb, t1, b, t2 ):
-    histogram = get_histogram(tbtb, t1, b, t2)
-    
-    levels = []
-    phi = 0.5*math.sqrt(5) + 0.5
-
-    curr = 0.05
-    for i in range(len(histogram)):
-	   levels.append(curr)
-	   curr *= phi
-    
-    rl = []
-    for i in range(len(levels)):
-	   rl.append( (t2 - (t2 - b) * levels[i], 100*histogram[i] ) )
-
-    return rl
-
-#
-#
-#
-
-def compute_tbtb_old( quotes ):
-    levels = []
-    phi = 0.5*math.sqrt(5) + 0.5
-
-    curr = 0.05
-    for i in range(NUM_FIBO_LEVELS):
-        levels.append(curr)
-        curr *= phi
-        
-    tbtb = list()
-
-    b = quotes[0]
-    c = quotes[1]
-    d = quotes[2]
-
-    for i in range(0, len(quotes) - 3):
-        a = b
-        b = c
-        c = d
-        d = quotes[i+3]
-
-	   #
-	   #	top, bottom, top, bottom
-	   #
-
-        if (a > b) and (c > b) and (c > d):
-            v1 = (a - b)
-            v2 = (c - b)
-            theta = math.atan2(v1, v2)
-
-            v3 = (d - c)
-            ratio = v3 / v2
-            tbtb.append([theta, get_level(levels, -ratio)])
-            
-    return tbtb 
-    
-# Implement this as an iterator to be used within compute_tbtb
-def find_tbtb( quotes ):    
-    state = 0
-    i = 0
-    
-    while i < len(quotes):
-        val = quotes[i]
-        
-        if state == 0:
-            t1 = val
-            state = 1
-        elif state == 1:
-            if val < t1:
-                b1 = val
-                state = 2
-            else:
-                t1 = val    
-        elif state == 2:
-            if val > b1:
-                t2 = val
-                state = 3
-            else:
-                b1 = val
-        elif state == 3:
-            if val < t2:
-                b2 = val
-                state = 4
-            else:
-                t2 = val
-        elif state == 4:
-            if val > b2:
-                state = 3
-                
-                yield ( t1, b1, t2, b2 )
-                
-                t1 = t2
-                b1 = b2
-                t2 = val
-            else:
-                b2 = val
+                p1 = p2
+                p2 = p3
+                p3 = p4
+            p4 = val
         
         i = i + 1
 
     if state >= 3:
-        yield ( t1, b1, t2, None )
-    
-def find_last_t1bt2( quotes ):
+        yield ( p1, p2, p3, val )
+
+def find_last_pattern( quotes ):
     found = False
     
-    for ( t1, b1, t2, b2 ) in find_tbtb( quotes ):
+    for ( p1, p2, p3, p4 ) in find_pattern( quotes ):
         found = True
         pass
     
     if found:
-        return ( t1, b1, t2 )
+        return ( p1, p2, p3, p4 )
     else:
         return None
     
+
     
-def find_btbt( quotes ):
-    state = 0
-    i = 0
     
-    while i < len(quotes):
-        val = quotes[i]
-        
-        if state == 0:
-            b1 = val
-            state = 1
-        elif state == 1:
-            if val > b1:
-                t1 = val
-                state = 2
-            else:
-                b1 = val    
-        elif state == 2:
-            if val < t1:
-                b2 = val
-                state = 3
-            else:
-                t1 = val
-        elif state == 3:
-            if val > b2:
-                t2 = val
-                state = 4
-            else:
-                b2 = val
-        elif state == 4:
-            if val < t2:
-                state = 3
-                
-                yield ( b1, t1, b2, t2 )
-                
-                b1 = b2
-                t1 = t2
-                b2 = val
-                
-            else:
-                t2 = val
-        
-        i = i + 1
     
-    if state >= 3:
-        yield (  b1, t1, b2, None )
-        
-def find_last_b1tb2( quotes ):
-    found = False
-    
-    for ( b1, t1, b2, t2 ) in find_btbt( quotes ):
-        found = True
-        pass
-    
-    if found:
-        return ( b1, t1, b2 )
-    else:
-        return None
-        
-
-def compute_tbtb( quotes ):
-    levels = []
-    phi = 0.5*math.sqrt(5) + 0.5
-
-    curr = 0.05
-    for i in range(NUM_FIBO_LEVELS):
-        levels.append(curr)
-        curr *= phi
-        
-    tbtb = list()
-    
-    for (t1,b1,t2,b2) in find_tbtb( quotes ):
-        if b2 != None:
-            v1 = (t1 - b1)
-            v2 = (t2 - b1)
-            theta = math.atan2(v1, v2)
-
-            v3 = (b2 - t2)
-            ratio = v3 / v2
-            fibolevel = get_fibonacci_level(levels, -ratio)
-            tbtb.append((theta, fibolevel))
-
-    return tbtb
-           
-    
-def compute_btbt( quotes ):
-    levels = []
-    phi = 0.5*math.sqrt(5) + 0.5
-
-    curr = 0.05
-    for i in range(NUM_FIBO_LEVELS):
-        levels.append(curr)
-        curr *= phi
-
-    btbt = list()
-    
-    for (b1,t1,b2,t2) in find_btbt( quotes ):
-        if t2 != None:
-            v1 = (b1 - t1)
-            v2 = (b2 - t1)
-            theta = math.atan2(v1, v2)
-
-            v3 = (t2 - b2)
-            ratio = v3 / v2
-            
-            if -ratio < 467:
-                fibolevel = get_fibonacci_level(levels, -ratio)
-            btbt.append((theta, fibolevel))
-            
-    return btbt
-
-    """
-    state = 0
-    i = 0
-    
-    while i < len(quotes):
-        val = quotes[i]
-        
-        if state == 0:
-            b1 = val
-            state = 1
-        elif state == 1:
-            if val > b1:
-                t1 = val
-                state = 2
-            else:
-                b1 = val    
-        elif state == 2:
-            if val < t1:
-                b2 = val
-                state = 3
-            else:
-                t1 = val
-        elif state == 3:
-            if val > b2:
-                t2 = val
-                state = 4
-            else:
-                b2 = val
-        elif state == 4:
-            if val < t2:
-                v1 = (b1 - t1)
-                v2 = (b2 - t1)
-                theta = math.atan2(v1, v2)
-
-                v3 = (t2 - b2)
-                ratio = v3 / v2
-                fibolevel = get_fibonacci_level(levels, -ratio)
-                btbt.append((theta, fibolevel))
-                 
-                b1 = b2
-                t1 = t2
-                b2 = val
-                state = 3
-            else:
-                t2 = val
-        
-        i = i + 1
-                    
-    return ( (b1, t1, b2), btbt )
-    """
-    
-#
-#
-#
-
-# Read gold stuff
-input = open("goldprice.txt", "rb")
-lines = input.readlines()
-input.close()
-
-quotes = []
-
-for l in lines:
-#	date  = l[:10]
-	value = l[11:-2]
-	quotes.append(float(value))
-
-quotes.reverse()
-
-# read swedbank
-"""
-input = open("swedbank.txt", "rb")
-lines = input.readlines()
-input.close()
-
-quotes = []
-
-for l in lines:
-#	date  = l[:10]
-	value = l[11:-2]
-	quotes.append(float(value))
-
-quotes.reverse()
-"""
-
-#   
-
-
-"""
-t1 = 1360.03
-b  = 1342.53
-t2 = 1353.11
-histogram = get_histogram(t1, b, t2)
-
-sum = 0
-for i in range(NUM_FIBO_LEVELS):
-	sum += histogram[i]
-	print "%.2f: %.2f%%\t(%.2f%%)" %(t2 - (t2 - b) * levels[i], 100*histogram[i], 100*sum)
-
-
-print get_retracements( t1, b, t2 )
-
-print levels
-   """ 
+  
