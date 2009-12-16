@@ -231,6 +231,34 @@ class DateLabels(group.Group):
             dateString = text.Text (date.strftime (format))
             coord = ( coord[0] + delta[1], coord[1] + delta[2] )
             self.append ( Label ( dateString, coord, 0 ) )
+            
+            
+def generateMonthlyStrings( startDate, endDate ):
+    year = startDate.year
+    endYear = endDate.year
+        
+    month = startDate.month
+    endMonth = endDate.month
+
+    labels = list()
+    while year < endYear or month < endMonth:
+        d = date(year, month, 1)
+        
+        if month == 1:
+            format = "%b %y"
+        else:
+            format = "%b"            
+              
+        dateString = text.Text (d.strftime (format))
+            
+        labels.append(dateString)
+        
+        month += 1
+        if month > 12:
+            month = 1
+            year += 1
+                            
+    return labels
                      
 #
 # Class Bars 
