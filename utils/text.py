@@ -20,12 +20,28 @@ class AttrFontSize(object):
     def __str__ ( self ):
         return str_attr ( 'font-size', self.font_size )
     
+class AttrFontWeight(object):
+    def __init__ ( self ):
+        self.font_weight = None
+        
+    def __str__ ( self ):
+        return str_attr ( 'font-weight', self.font_weight )
+        
+class AttrFontStyle(object):
+    def __init__ ( self ):
+        self.font_style = None
+        
+    def __str__ ( self ):
+        return str_attr ( 'font-style', self.font_style )
+
 
 class Text( Core, 
             Paint,
             AttrTransform,
             AttrFontFamily,
-            AttrFontSize ):
+            AttrFontSize,
+            AttrFontWeight,
+            AttrFontStyle ):
 
     def __init__(self, text_string ):
         init_bases (Text, self)
