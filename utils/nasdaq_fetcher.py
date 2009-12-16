@@ -19,6 +19,7 @@ xmlquery
 """
 
 """
+# Shares
 xmlquery	
 <post> 
 <param name="Exchange" value="NMF"/> 
@@ -37,14 +38,58 @@ xmlquery
 </post>
 """
 
+"""
+# Index
+<post> 
+<param name="Exchange" value="NMF"/> 
+<param name="SubSystem" value="Prices"/> 
+<param name="Action" value="GetMarket"/> <param name="inst__a" value="0,1,2,21,35,36,109,110"/> 
+<param name="ext_xslt" value="inst_table.xsl"/> 
+<param name="Market" value="IndexX:1"/> 
+<param name="XPath" value="//inst[starts-with(@nm,'OMXN') or starts-with(@nm,'N')]"/> <param name="ext_xslt_lang" value="en"/> <param name="ext_xslt_tableId" value="searchNordicIndexesTable"/> <param name="ext_xslt_tableClass" value="tablesorter"/> <param name="ext_xslt_options" value=",noflag,"/> 
+</post>
+"""
+
+"""
+<post> 
+<param name="SubSystem" value="Prices"/> 
+<param name="Action" value="GetInstrument"/> 
+<param name="inst__a" value="1,2,37,20,21"/> 
+<param name="Exception" value="false"/> 
+<param name="ext_xslt" value="inst_table.xsl"/> <param name="Instrument" value="SSESE0001809476"/> <param name="Instrument" value="CSEDX0000001376"/> <param name="Instrument" value="SSESE0000337842"/> <param name="Instrument" value="HEXFI0008900212"/> <param name="Instrument" value="ICEIS0000018885"/> <param name="ext_xslt_lang" value="en"/> <param name="ext_xslt_tableId" value="nordicIndexesGraphTable"/> <param name="ext_xslt_options" value=",noflag,nozebra,"/> </post>
+"""
+"""
+<post> 
+<param name="SubSystem" value="Prices"/> 
+<param name="Action" value="GetInstrument"/> 
+<param name="inst__a" value="1,2,37,34,20,21,35,36,10"/> 
+<param name="Exception" value="false"/> 
+<param name="ext_xslt" value="inst_table.xsl"/> 
+<param name="Instrument" value="SSESE0000337842"/> 
+<param name="ext_xslt_lang" value="en"/> 
+<param name="ext_xslt_tableId" value="avistaTable"/> 
+<param name="ext_xslt_options" value=",noflag,nolink,"/> 
+</post>
+
+<post> 
+<param name="SubSystem" value="History"/> 
+<param name="Action" value="GetDataSeries"/> 
+<param name="AppendIntraDay" value="no"/> 
+<param name="Instrument" value="SSESE0000337842"/> 
+<param name="FromDate" value="2009-09-02"/> 
+<param name="ToDate" value="2009-12-02"/> 
+<param name="hi__a" value="0,1,2,4,21,8,10,11,12"/> 
+<param name="ext_xslt" value="hi_table.xsl"/> 
+<param name="ext_xslt_lang" value="en"/> 
+<param name="ext_xslt_hiddenattrs" value=",ip,iv,"/> 
+<param name="ext_xslt_tableId" value="historicalTable"/> 
+</post>
+"""
+
 import os
 import os.path
 import cPickle
 import xml.parsers.expat
-
-VolvoB = 'SSE336'
-EricssonB = 'SSE101'
-OMX30 = 'SSESE0000337842'
 
 from decimal import *
 
@@ -75,10 +120,38 @@ class QuoteDayTick(object):
         s+= str(self.close) + " vol.: " 
         s+= str(self.volume) 
         return s
+        
+        
+        
             
-class QuoteList(list):
-    def getClosePrices(self):
-        return [q.close for q in self]
+class QuoteList(dict):
+    def getClosePrices(self, startDate = None, endDate = None):
+        quotes_list = self.items()
+        quotes_list.sort()
+        if startDate != None and endDate == None:
+            return [q.close for (d,q) in quotes_list if d >= startDate]
+        elif startDate == None and endDate != None:
+            return [q.close for (d,q) in quotes_list if d <= endDate]
+        elif startDate != None and endDate != None:
+            return [q.close for (d,q) in quotes_list if d >= startDate and d <= endDate ]
+        else:
+            return [q.close for (d,q) in quotes_list]
+            
+    # Sample prices
+    # Approximate a week with 5 days.
+    # Approximate a month with 20 days
+    def samplePrices(self, resolution ):
+        sampled_quotes = QuoteList()
+        quotes_list = self.items()
+        quotes_list.sort()
+        
+        # Very simple Point sampling:
+        for i in range(0, len(quotes_list), resolution):
+            (d,q) = quotes_list[i]
+            sampled_quotes[d] = q
+            
+        return sampled_quotes
+        
         
     def __str__(self):
         s = ""
@@ -155,12 +228,8 @@ class ShareList(list):
 class ShareCache(object):
     def __init__(self, directory):
         pass
-        
-    
 
-
-
-def get_market( ):
+def get_market():
     params_dict = { 'Exchange':'NMF', 'SubSystem':'Prices', 'Action':'GetMarket', 'Market':'L:3303', 'instrumentType':'S' }
     
     import urllib
@@ -185,20 +254,17 @@ def get_market( ):
     return shares
     
 def get_ticks( instrumentId, fromDate = datetime.date.today(), toDate = datetime.date.today() ):
-    params_dict = { 'SubSystem':'History', 'Action':'GetDataSeries', 'Instrument': 'SSE366', "AppendIntraDay":"yes", "FromDate":"2009-10-20", "ToDate":"2009-11-20" }
+    params_dict = { 'SubSystem':'History', 'Action':'GetDataSeries', 'Instrument': 'SSE366', "AppendIntraDay":"no", "FromDate":"2009-10-20", "ToDate":"2009-11-20" }
     
     params_dict['Instrument'] = instrumentId
     params_dict['FromDate'] = str(fromDate)
     params_dict['ToDate'] = str(toDate)
     
-    print params_dict
-    
     import urllib
     params = urllib.urlencode(params_dict)
 
     f = urllib.urlopen("http://www.nasdaqomxnordic.com/webproxy/DataFeedProxy.aspx?%s" % params)
-    
-    print "http://www.nasdaqomxnordic.com/webproxy/DataFeedProxy.aspx?%s" % params
+  
     
     quotes = QuoteList()
 
@@ -206,7 +272,8 @@ def get_ticks( instrumentId, fromDate = datetime.date.today(), toDate = datetime
     def start_element(name, attrs):
          if name == 'hi':
             if attrs['cp'] != '':
-                quotes.append( QuoteDayTick( attrs['dt'], attrs['lp'], attrs['hp'], attrs['cp'], attrs['tv'] ) )
+                q = QuoteDayTick( attrs['dt'], attrs['lp'], attrs['hp'], attrs['cp'], attrs['tv'] )
+                quotes[q.date] = q
     def end_element(name):
         pass
     def char_data(data):
@@ -224,15 +291,6 @@ def get_ticks( instrumentId, fromDate = datetime.date.today(), toDate = datetime
    
 def strToDate( date ):
     return datetime.date( int(date[0:4]), int(date[5:7]), int(date[8:]) )
-
-#q = get_ticks( OMX30, strToDate('1980-10-01'), strToDate('2009-11-1') )
-
-#a = q.getClosePrices()
-
-#s = unicode(get_market())
-#print s.encode('iso-8859-1') 
-
-
 
     
 
