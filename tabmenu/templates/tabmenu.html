@@ -1,0 +1,11 @@
+<ul class="globalnav">
+{% for tab in tabs %}
+    <li><a {% if tab.selected %} class="here" {% endif %} href="/{{ tab.url }}">{{ tab.name }}</a>
+    {% if tab.selected and tab.has_subtabs %}
+        <ul>{% for subtab in tab.subtabs %}
+            <li><a {% if subtab.selected %} class="here" {% endif %} href="/{{ subtab.url }}">{{ subtab.name }}</a></li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    </li>
+{% endfor %}
