@@ -41,12 +41,12 @@ def bars( values ):
         probability = Decimal(str(t[1])).quantize(Decimal('1.00'))
 
         label = text.Text(str(probability) )
-        label.translate( t[1] * 10 + 80, T + r.width / 2)
+        label.translate( t[1] * 10 + 60, T + r.width / 2)
         
         g.append( label )
         
         bar = copy(r)
-        bar.translate( 70, T - r.width / 2)
+        bar.translate( 50, T - r.width / 2)
         bar.scale( t[1], 1 )
         g.append( bar )
         T = T + 20
@@ -55,14 +55,10 @@ def bars( values ):
     p.stroke = "black"
     p.stroke_width = 1
         
-    axisx = AxisX ( (70, T), height * 1.10, 2*10, p )
-    axisy = AxisY ( (70, T), len(values) * 20, 20, p )
+    axisx = AxisX ( (50, T), height * 1.10, 2*10, p )
+    axisy = AxisY ( (50, T), len(values) * 20, 20, p )
     g.append( axisx )
     g.append( axisy )
-    
-    #grid = Grid( b.viewport, 25, 1, p )
-    
-    #g.append(grid)
     
     return g
     
@@ -75,15 +71,12 @@ class RetracementLevelsChart(svg.Svg):
         self.setId (id)
         self.setXmlLang ("english")
         
-      #  self.width = 1000
-      #  self.height = 1000
-        
-        width = 320
+        width = 300
         height = 300
                 
         # Frame
         frame = group.Group()
-        frame.setId("feo")
+        frame.setId("unnamed")
         r = rect.Rect()
         r.x = 0
         r.y = 0
@@ -98,7 +91,7 @@ class RetracementLevelsChart(svg.Svg):
  
         # Chart       
         chart = group.Group()        
-        chart.translate( 50, 50 )
+        chart.translate( 15, 50 )
         frame.append( chart )
         
         # Create the bar template
@@ -157,16 +150,21 @@ class FibonacciChart(svg.Svg):
         
         import datetime
         today = datetime.date.today()
-        one_year_ago = today - datetime.timedelta( days = NUM_DAYS*resolution )
+        start_date = today - datetime.timedelta( days = NUM_DAYS*resolution )
         
-        vavlues = values.samplePrices( resolution )
-        prices = values.getClosePrices(one_year_ago, today)
+        values = values.samplePrices( resolution )
+        prices = values.getClosePrices(start_date, today)
+        
+        print prices
+        
         min_price = min(prices)
         max_price = max(prices)
-        
-        print prices[-1]
-        
-        scaley = height / ( max_price - min_price )
+                
+        price_span = max_price - min_price
+        if price_span > 0:
+            scaley = height / ( price_span )
+        else:
+            scaley = 1
         scalex = float(width) / float(len(prices))
         
         v = [ (i*scalex, ((prices[i]-min_price)*scaley)-height ) for i in range(len(prices))]
@@ -184,8 +182,8 @@ class FibonacciChart(svg.Svg):
             if l[0] > 0:
                 prob += l[1]
                 
-                if l[0] > prices[-1]:
-                    continue
+              #  if l[0] > prices[-1]:
+               #     continue
                     
                 if prob > 5 and prob < 99:
                     fibo_line = Line()
@@ -199,7 +197,8 @@ class FibonacciChart(svg.Svg):
                     plot.append( fibo_line )
                     
                     fprob = Decimal(str(prob)).quantize(Decimal("1.0"))
-                    fibo_prob = text.Text( str(fprob) + "%")     
+                    fprice = Decimal(str(l[0])).quantize(Decimal('1.0'))
+                    fibo_prob = text.Text( str(fprob) + "%" + " (" + str(fprice) +")")     
                     fibo_prob.font_size = "50%"
                     fibo_prob.font_family= "Verdana"
                     fibo_prob.stroke = fibo_line.stroke
@@ -229,7 +228,7 @@ class FibonacciChart(svg.Svg):
         chart.append( desc_text )
         
         # Generate X Axis
-        month_strings = generateMonthlyStrings( one_year_ago, today )
+        month_strings = generateMonthlyStrings( start_date, today )
         
         if len(month_strings) > 1:
             date_tick = width / (len( month_strings ) - 1)
@@ -275,7 +274,7 @@ class FibonacciChart(svg.Svg):
 
         price_inc = Decimal(str(price_inc)).quantize(Decimal('1.0'))
 
-        p = min_price
+        p = Decimal(str(min_price))
         for r in range(0,NUM_TICKS+1 ):
             d = Decimal(p).quantize(Decimal('1.00'))
         

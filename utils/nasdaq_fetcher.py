@@ -91,8 +91,6 @@ import os.path
 import cPickle
 import xml.parsers.expat
 
-from decimal import *
-
 class QuoteDayTick(object):
     def __init__(self, date, low, high, close, volume):
         self.date = strToDate(date)
@@ -108,10 +106,10 @@ class QuoteDayTick(object):
         if volume == '':
             volume = 0
         
-        self.low = Decimal(low)
-        self.high = Decimal(high)
-        self.close = Decimal(close)
-        self.volume = Decimal(volume)
+        self.low = float(low)
+        self.high = float(high)
+        self.close = float(close)
+        self.volume = float(volume)
             
     def __str__(self):
         s = str(self.date) + " low: " 
@@ -159,9 +157,7 @@ class QuoteList(dict):
             s += str(q) + "\n"
         return s
 
-class QuoteCache(object):
-    import pickle
-    
+class QuoteCache(object):    
     def __init__(self, directory):
         self.directory = directory
         if not os.path.exists( directory ):
@@ -177,13 +173,15 @@ class QuoteCache(object):
             return None
         
     def put( self, id, quote_list ):
-        if len(quote_list) > 0: 
+        #if len(quote_list) > 0: 
             if not os.path.exists( self.cachedFilename(id) ):
                 f = open( self.cachedFilename(id), 'w')
                 cPickle.dump( quote_list, f )
         
     def cachedFilename( self, id ):
         return os.path.join(self.directory, id + '_' + str(datetime.date.today()) ) 
+        
+ 
            
 class QuoteProxy(object):
     def __init__(self, directory):
@@ -230,7 +228,7 @@ class ShareCache(object):
         pass
 
 def get_market():
-    params_dict = { 'Exchange':'NMF', 'SubSystem':'Prices', 'Action':'GetMarket', 'Market':'L:3303', 'instrumentType':'S' }
+    params_dict = { 'Exchange':'NMF', 'SubSystem':'Prices', 'Action':'GetMarket', 'Market':'L:10214', 'instrumentType':'S' }
     
     import urllib
     params = urllib.urlencode(params_dict)
