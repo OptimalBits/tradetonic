@@ -20,3 +20,197 @@ color: #781351;
 background: #fee3ad;
 width:5em;
 }
+
+#box-table
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 12px;
+	margin: 0px;
+	width: 100%;
+	text-align: center;
+	border-collapse: collapse;
+	border-top: 7px solid #9baff1;
+	border-bottom: 7px solid #9baff1;
+}
+#box-table th
+{
+	font-size: 13px;
+	font-weight: normal;
+	padding: 8px;
+	background: #e8edff;
+	border-right: 1px solid #9baff1;
+	border-left: 1px solid #9baff1;
+	color: #039;
+}
+#box-table td
+{
+	padding: 8px;
+	background: #e8edff; 
+	border-right: 1px solid #aabcfe;
+	border-left: 1px solid #aabcfe;
+	color: #669;
+}
+
+
+#hor-zebra
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 12px;
+	margin: 0px;
+	width: 100%;
+	text-align: left;
+	border-collapse: collapse;
+}
+#hor-zebra th
+{
+	font-size: 12px;
+	font-weight: normal;
+	padding: 10px 8px;
+	color: #039;
+}
+#hor-zebra td
+{
+	padding: 8px;
+	color: #669;
+}
+#hor-zebra .odd
+{
+	background: #e8edff; 
+}
+
+
+/*globalnav*/
+
+.globalnav {
+	position:relative;
+	float:left;
+	width:100%;
+	padding:0 0 1.75em 1em;
+	margin:0;
+	list-style:none;
+	line-height:1em;
+}
+
+.globalnav LI {
+	float:left;
+	margin:0;
+	padding:0;
+}
+
+.globalnav A {
+	display:block;
+	color:#444;
+	text-decoration:none;
+	font-weight:bold;
+	background:#ddd;
+	margin:0;
+	padding:0.25em 1em;
+	border-left:1px solid #fff;
+	border-top:1px solid #fff;
+	border-right:1px solid #aaa;
+}
+
+.globalnav A:hover,
+.globalnav A:active,
+.globalnav A.here:link,
+.globalnav A.here:visited {	
+    background:#bbb;
+}
+
+.globalnav A.here:link,
+.globalnav A.here:visited {
+	position:relative;
+	z-index:102;
+}
+
+/*subnav*/
+
+.globalnav UL {
+	position:absolute;
+	left:0;
+	top:1.5em;
+	float:left;
+	background:#bbb;
+	width:100%;
+	margin:0;
+	padding:0.25em 0.25em 0.25em 1em;
+	list-style:none;
+	border-top:1px solid #fff;
+}
+
+.globalnav UL LI {
+	float:left;
+	display:block;
+	margin-top:1px;
+}
+
+.globalnav UL A {
+	background:#bbb;
+	color:#fff;
+	display:inline;
+	margin:0;
+	padding:0 1em;
+	border:0
+}
+
+.globalnav UL A:hover,
+.globalnav UL A:active,
+.globalnav UL A.here:link,
+.globalnav UL A.here:visited {
+	color:#444;
+}
+
+
+/*
+	http://exploding-boy.com/images/cssmenus2/menus.html
+*/
+
+.tabs10 {
+	width:100%;
+	font-size:93%;
+	line-height:normal;
+}
+.tabs10 ul {
+	margin:0;
+	padding:10px 10px 0 0;
+	list-style:none;
+}
+.tabs10 li {
+	display:inline;
+	margin:0;
+	padding:0;
+}
+.tabs10 a {
+	float:left;
+	background:url("tableft10.gif") no-repeat left top;
+	margin:0;
+	padding:0 0 0 4px;
+	text-decoration:none;	
+	background-position:0% -42px;
+}
+.tabs10 a span {
+	font: bold 10px/1.5em Verdana;
+	display:block;
+	float:left;
+	background:url("tabright10.gif") no-repeat right top;
+	padding:5px 15px 4px 6px;
+	color:#FFF;	
+	background-position:100% -42px;
+}
+
+#tabs10 a:hover span {
+	color:#FFF;
+}
+.tabs10 a:hover, .tabs10 .selected a  {
+	background-position:0% 0px;
+}
+.tabs10 a:hover span, .tabs10 .selected a span  {
+	background-position:100% 0px;
+}
+
+.panel{
+	border:1px solid #bcd2e6;
+	padding:10px;
+	width:400px;
+}
+
