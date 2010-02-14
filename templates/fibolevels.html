@@ -1,0 +1,123 @@
+{% extends "tradetonic.html" %}
+
+{% block head_scripts %}
+<script LANGUAGE="javascript">
+        function updateQuoteDropList(value)
+        {
+            $('quotes').update('<div id="loading2"/>');
+            new Ajax.Updater('quotes','/fibonacci/menus/quotes/' + value, 
+	        { 
+              parameters:{object:value},
+              evalScripts:true,
+              onComplete:function(transport)
+              {
+                updateChart($('quote_list').value, $('resolution').value);      
+              }
+            }
+            );
+        }
+    
+        function updateChart(value, resolution)
+        {
+            $('histogram').update('<div id="loading"/>');
+            $('params').update('<div id="loading"/>');
+            $('levels').update('<div id="loading"/>');
+            
+            new Ajax.Updater('histogram','/fibonacci/quote/' + value + '/' + resolution, 
+	        { 
+              parameters:{object:value},
+              evalScripts:true,
+              onComplete:function(transport){}
+            }
+            );
+            
+            new Ajax.Updater('levels','/fibonacci/levels/' + value + '/' + resolution, 
+	        { 
+              parameters:{object:value},
+              evalScripts:true,
+              onComplete:function(transport){}
+            }
+            );
+            
+            new Ajax.Updater('params','/fibonacci/params/' + value + '/' + resolution, 
+	        { 
+              parameters:{object:value},
+              evalScripts:true,
+            }
+            );
+        }
+        
+        function OnChangeQuote(dropdown)
+        {
+            updateChart(dropdown.value, $('resolution').value );
+            return true;
+        }
+               
+        function OnChangeType(dropdown)
+        {            
+            updateQuoteDropList(dropdown.value);
+            return true;
+        }
+        
+        function OnChangeResolution(dropdown)
+        {
+            updateChart($('quote_list').value, dropdown.value);   
+        }
+    </script>
+{% endblock %}
+
+{% block init %}
+<script LANGUAGE="javascript">
+        <!--
+        Event.observe(window,'load', function() 
+        {   		
+         /*   var tabSet1 = new ProtoTabs('main_tab',{defaultPanel:'home', ajaxUrls: {							
+				home:'/home',
+				fibonacci:'/fibonacci',
+				tutorials:'/tutorials',
+				news:'/news',
+				contact:'/contact'
+			} }); */
+
+            updateQuoteDropList('SHARES');
+        });
+        //-->
+</script>
+{% endblock %}
+
+{% block main_pane %}
+        <div class="span-20 box last">
+            <select name=quote_type onchange="javascript: OnChangeType(this);">
+                <option value="SHARES">Shares</option>
+                <option value="INDEXES">Indexes</option>
+            </select>
+
+            <span id="quotes">        
+            <!-- Quotes selector holder -->
+            </span>
+        
+            Resolution: 
+            <select id="resolution" name=resolution onchange='OnChangeResolution(this);'>
+                <option value=1>Daily</option>
+                <option value=5>Weekly</option>
+                <option value=20>Monthly</option>
+            </select>
+        
+            <input type=checkbox name="next" value="next">Next retracement</input>
+            <input type=checkbox name="next" value="real">Use real time</input>
+              
+            <div id="params"/>
+                <!-- Parameters holder -->
+            </div> 
+        </div>
+    
+        <div class="span-20 last">
+            <div class="span-10" id="histogram">
+                <!-- Histogram holder -->        
+            </div>
+         
+            <div class="span-10 last" id="levels">  
+                <!-- Levels holder -->
+            </div> 
+        </div>
+{% endblock %}  

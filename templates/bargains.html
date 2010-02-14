@@ -1,0 +1,26 @@
+{% extends "tradetonic.html" %}
+
+{% block main_pane %}
+<div class="span-20">
+
+<table id="hor-zebra">
+<thead>
+    <tr>
+        <th>Share</th><th>Price</th><th>Reversal Odds</th><th>Trend</th><th>Recomendation</th>
+    </tr>
+</thead>
+
+<tbody>
+{% for share in share_list %}
+ <tr class="{% cycle 'odd' 'even' %}">
+  <td><a href="/fibonacci/charts/{{ share.0.id }}">{{ share.0.name }}</a></td>
+  <td>{{ share.0.last_pattern.3 }}</td>
+  <td>{{ share.0.odds }}</td>
+  <td>{{ share.0.get_trend }}</td>
+  <td>{{ share.1 }}</td>
+ </tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %} 

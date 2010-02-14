@@ -1,0 +1,17 @@
+<table id="box-table">
+<thead>
+<tr>
+{% if up_trend %}<th>Bottom 1</th><th>Top</th><th>Bottom 2</th>{% else %}
+<th>Top 1</th><th>Bottom</th><th>Top 2</th>{% endif %}
+<th>Current Price</th>
+<th>Current Odds for reversal</th>
+<th>Trend</th>  
+</tr>
+</thead>
+<tbody>
+    <tr>
+        <td>{{ params.a }}</td><td>{{ params.b }}</td><td>{{ params.c }}</td>
+        <td>{{ params.d }}</td><td>{{ params.odds }}</td><td>{{ params.trend }}</td>
+    </tr>
+</tbody>
+</table>
