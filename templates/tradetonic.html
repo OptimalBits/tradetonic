@@ -1,3 +1,4 @@
+{% load tabmenu %}
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html 
       PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -8,159 +9,60 @@
       xmlns:xlink="http://www.w3.org/1999/xlink">
 <head>
     <link rel="alternate" type="application/rss+xml" title="Tradetonic.com RSS Feed" href="/feeds/latest" />
+    
+     <!-- Framework CSS -->  
+    <link rel="stylesheet" href="/site_media/css/blueprint/screen.css" type="text/css" media="screen, projection" />  
+    <link rel="stylesheet" href="/site_media/css/blueprint/print.css" type="text/css" media="print" />  
+    <!--[if IE]><link rel="stylesheet" href="site_media/css/blueprint/ie.css" type="text/css" media="screen, projection" /><![endif]-->  
+           
+    <link rel="stylesheet" href="/site_media/css/tradetonic.css"/>
+    
+    <script type="text/javascript" src="/site_media/js/prototype.js"/>
+    <script type="text/javascript" src="/site_media/js/svgweb/svg.js"/>
+    
 
-    <link rel="stylesheet" href="site_media/css/screen.css"/>
-    <link rel="stylesheet" href="site_media/css/960.css"/>
-    <link rel="stylesheet" href="site_media/css/tradetonic.css"/>
- 
-    <script type="text/javascript" src="site_media/js/prototype.js"/>
-    <script type="text/javascript" src="site_media/js/svgweb/svg.js"/>
-   
     <title>Trade Tonic</title>
     
-    <script LANGUAGE="javascript">
-        function updateQuoteDropList(value)
-        {
-            $('quotes').update('<div id="loading2"/>');
-            new Ajax.Updater('quotes','/menus/quotes/' + value, 
-	        { 
-              parameters:{object:value},
-              evalScripts:true,
-              onComplete:function(transport)
-              {
-                updateChart($('quote_list').value, $('resolution').value);      
-              }
-            }
-            );
-        }
-    
-        function updateChart(value, resolution)
-        {
-            $('histogram').update('<div id="loading"/>');
-            $('params').update('<div id="loading"/>');
-            $('levels').update('<div id="loading"/>');
-            
-            new Ajax.Updater('histogram','/quote/' + value + '/' + resolution, 
-	        { 
-              parameters:{object:value},
-              evalScripts:true,
-              onComplete:function(transport){}
-            }
-            );
-            
-            new Ajax.Updater('levels','/levels/' + value + '/' + resolution, 
-	        { 
-              parameters:{object:value},
-              evalScripts:true,
-              onComplete:function(transport){}
-            }
-            );
-            
-            new Ajax.Updater('params','/params/' + value + '/' + resolution, 
-	        { 
-              parameters:{object:value},
-              evalScripts:true,
-            }
-            );
-        }
-        
-        function OnChangeQuote(dropdown)
-        {
-            updateChart(dropdown.value, $('resolution').value );
-            
-            return true;
-        }
-               
-        function OnChangeType(dropdown)
-        {            
-            updateQuoteDropList(dropdown.value);
-            
-            return true;
-        }
-        
-        function OnChangeResolution(dropdown)
-        {
-            updateChart($('quote_list').value, dropdown.value);   
-        }
-    </script>
+    {% block head_scripts %}
+    {% endblock %}
 </head>
 
 <body>
-<script LANGUAGE="javascript">
-        <!--
-        Event.observe(window,'load', function() 
-        {   
-            updateQuoteDropList('SHARES');
-        });        
-        //-->
-</script>
-        
-  <!-- header container -->  
-  <div id="header-wrap">
-    <div id="header" class="container_16">	
-		<h1 id="logo-text"><a href="/" title="">Trade Tonic</a></h1>		
-		<p id="intro">Fibonacci levels for traders</p>
-		<!-- navigation -->
-		<div  id="nav">
-			<ul>
-			<li><a href="/">Home</a></li>
-			<li><a href="/">Fibonacci Levels</a></li>
-			<li><a href="/">Tutorials</a></li>
-			<li><a href="/">News &amp; press</a></li>
-			<li><a href="/">Contact us</a></li>
-		</ul>
-		</div>
-		<div id="header-image"></div> 
-    </div>
-  </div>
-  <!-- header ends here -->
-	  
-  <div id="content-outer">
-    <div class="container_16" id="content-wrapper">    
-        <select name=quote_type onchange="javascript: OnChangeType(this);">
-            <option value="SHARES">Shares</option>
-            <option value="INDEXES">Indexes</option>
-        </select>
+{% block init %}
 
-        <span id="quotes">        
-        <!-- Quotes selector holder -->
-        </span>
+{% endblock %}
         
-        <div id="params"/>
-        <!-- Parameters holder -->
-        </div>
-        
-        Current Odds of reversal: 
-        <div class="clear"></div>
-        
-        <div class="grid_7" id="histogram">
-        <!-- Histogram holder -->
-        </div>
-        
-        <div class="grid_7" id="levels">
-        <!-- Levels holder -->
-        </div>
-                
-        <div id="left-columns" class="grid_2">
-         	<div class="sidemenu">		
-		      <h3>Recent News</h3>
-			     We added a new fibonacci tool with improved odds support!
-		    </div>
-        </div>
-        
-        <div class="clear"></div>
-        
-        Resolution: 
-        <select id="resolution" name=resolution onchange='OnChangeResolution(this);'>
-            <option value=1>Daily</option>
-            <option value=5>Weekly</option>
-            <option value=20>Monthly</option>
-        </select>
-
+<!-- header container --> 
+<div class="container"> 
+    <div id="header" class="span-24 last">
+        	<h1><a href="/" title="">Trade Tonic</a></h1>		
+		    <h3 class="alt">Fibonacci levels for traders</p>
     </div>
-  </div>
+
+    <div class="span-20 last">	     
+        {% tabmenu tabs %}
+    </div> 
+        
+    <div class="span-21">     
+        {% block main_pane %}
+        <div class="span-20 last">
+            empty
+        </div>
+        {% endblock %}  
+    </div>
+
+    <div class="span-3 last" id="sidebar">
+        <div id="mini-news">
+            <!-- Mininews holder -->
+            <h2>News</h2>
+        </div>
+        <div id="links">
+            <h2>Links</h2>
+            <!-- Mininews holder -->
+        </div>
+    </div>
             
-  <div id="footer-bottom">
+  <div class="span-24 box last">
 	
     <p class="bottom-left">			
 			<p><a href=http://www.github.com/manast/plunatica>Trade Tonic</a> (c) 2009 - Manuel Astudillo and Johan Stén. Powered by <a href=http://www.djangoproject.com>Django</a> </p>
@@ -174,9 +76,7 @@
 		<a href="http://validator.w3.org/check/referer">XHTML</a>
 	</p>	
   </div>
-    
-  <div class="grid_16" id="bottombar">
-  </div> 
+</div>
    
 </body>
 </html>
