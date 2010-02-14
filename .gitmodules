@@ -1,6 +1,4 @@
 [submodule "media/css/blueprint"]
 	path = media/css/blueprint
 	url = git://github.com/joshuaclayton/blueprint-css.git
-[submodule "media/js/prototype"]
-	path = media/js/prototype
-	url = git://github.com/sstephenson/prototype.git
+
