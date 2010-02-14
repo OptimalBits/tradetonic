@@ -73,5 +73,6 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
-    'tradetonic.fibolevels'
+    'tradetonic.fibolevels',
+    'tradetonic.tabmenu'
 )
