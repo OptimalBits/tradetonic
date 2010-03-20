@@ -33,7 +33,15 @@ class AttrFontStyle(object):
         
     def __str__ ( self ):
         return str_attr ( 'font-style', self.font_style )
-
+       
+# values: start | middle | end | inherit
+class AttrTextAnchor(object):
+	def __init__ ( self ):
+		self.text_anchor = None
+        
+	def __str__ ( self ):
+		return str_attr ( 'text-anchor', self.text_anchor )
+    
 
 class Text( Core, 
             Paint,
@@ -41,14 +49,15 @@ class Text( Core,
             AttrFontFamily,
             AttrFontSize,
             AttrFontWeight,
-            AttrFontStyle ):
+            AttrFontStyle,
+            AttrTextAnchor ):
 
     def __init__(self, text_string ):
         init_bases (Text, self)
         self.text_string = text_string
         
     def __str__ (self):
-        s = '<text '
+        s = '<text'
         s += str_attrs ( Text, self )
         s += '>'
         
