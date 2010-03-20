@@ -79,3 +79,25 @@ class AttrRy(object):
     def __str__ ( self ):
         return str_attr ( 'ry', self.ry )
         
+class AttrCx(object):
+    def __init__ ( self ):
+        self.cx = None
+        
+    def __str__ ( self ):
+        return str_attr ( 'cx', self.cx )
+
+        
+class AttrCy(object):
+    def __init__ ( self ):
+        self.cy = None
+    
+    def __str__ ( self ):
+        return str_attr ( 'cy', self.cy )
+        
+class AttrR(object):
+    def __init__ ( self ):
+        self.r = None
+    
+    def __str__ ( self ):
+        return str_attr ( 'r', self.r )
+
