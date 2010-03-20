@@ -7,7 +7,7 @@ urlpatterns = patterns( 'tradetonic.fibolevels.views',
                         url(r'^menus/quotes/(?P<quote_type>[A-Z]+)$', 'populate_quotes'),
                         url(r'^charts/', 'show_charts'),
                         url(r'^bargains/', 'show_bargains'),
-#                        url(r'','show_charts'),
+                        url(r'^','show_charts'),
                       )
                         
 
