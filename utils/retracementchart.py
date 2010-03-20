@@ -8,112 +8,151 @@ from retracement import *
 from line import *
 from decimal import Decimal
 
-NUM_DAYS = 40
+from gradient import *
+from pychart2 import *
 
-def bars( values ):
-    
-    from copy import copy
-    g = group.Group()
-    
-    r = rect.Rect()
-    r.x = 0
-    r.y = 0
-    r.width = 10
-    r.height = 10
-    r.rx = 0
-
-    x, y = zip(*values)
-        
-    maxx, minx = ( max(x), min(x) )
-    maxy, miny = ( max(y), min(y) )
-        
-    width = maxx - minx
-    height = ( maxy - miny ) * 10
-    
-    T = 0
-    for t in values:
-        level = Decimal(str(t[0])).quantize(Decimal('1.00'))
-    
-        label = text.Text(str(level) )
-        label.translate( 0, T + 10)
-        g.append( label )
-        
-        probability = Decimal(str(t[1])).quantize(Decimal('1.00'))
-
-        label = text.Text(str(probability) )
-        label.translate( t[1] * 10 + 60, T + r.width / 2)
-        
-        g.append( label )
-        
-        bar = copy(r)
-        bar.translate( 50, T - r.width / 2)
-        bar.scale( t[1], 1 )
-        g.append( bar )
-        T = T + 20
-   
-    p = Paint ()
-    p.stroke = "black"
-    p.stroke_width = 1
-        
-    axisx = AxisX ( (50, T), height * 1.10, 2*10, p )
-    axisy = AxisY ( (50, T), len(values) * 20, 20, p )
-    g.append( axisx )
-    g.append( axisy )
-    
-    return g
-    
+NUM_DAYS = 180
 
 class RetracementLevelsChart(svg.Svg):      
        def __init__ ( self, id, title, desc, values ):
         svg.Svg.__init__(self)
         
+        self.id = id
         self.setXmlSpace (True)
-        self.setId (id)
         self.setXmlLang ("english")
         
-        width = 300
-        height = 300
-                
-        # Frame
-        frame = group.Group()
-        frame.setId("unnamed")
-        r = rect.Rect()
-        r.x = 0
-        r.y = 0
-        r.width = width * 1.3
-        r.height = height * 1.3
-        r.rx = 20
-        r.stroke = "grey"
-        r.stroke_width = 1
-        r.fill = "none"
-        frame.append( r )
-        self.append( frame )
+        width = 440
+        height = 380
+        
+        layoutMgr = LayoutMgr( width, height )
+
+        layoutMgr.addLayout('plot', 0.1, 0.2, 0.8, 0.6 )
+        layoutMgr.addLayout('title', 0.0, 0.0, 1.0, 0.2 )
+        layoutMgr.addLayout('xlabel', 0.0, 0.1, 0.1, 0.8)
+
+        layoutMgr.addLayout('ylabel', 0.1, 0.8, 0.8, 0.2)
+        
+        # Add gradient
+        plotGradient = LinearGradient()
+        plotGradient.id = "plotGradient"
+        plotGradient.x2 = 0
+        plotGradient.y2 = 1
+
+        plotGradient.append( GradientStop( offset=0.0, stop_color="#889") ) 
+        plotGradient.append( GradientStop( offset=0.5, stop_color="#CCE") )
+        plotGradient.append( GradientStop( offset=1.0, stop_color="#889") )
+        self.append( plotGradient )
+             
+        barsPaint = Paint()
+        barsPaint.fill = plotGradient.getURI()
+        barsPaint.stroke = "gray"
  
         # Chart       
-        chart = group.Group()        
-        chart.translate( 15, 50 )
-        frame.append( chart )
+        chart = BarsChart( values, barsPaint, layoutMgr )
         
-        # Create the bar template
-        r = rect.Rect()
-        r.x = 0
-        r.y = 0
-        r.width = 10
-        r.height = 10
-        r.rx = 0
-       
-        title_text = text.Text( title )
-        title_text.translate ( 50, -30 )
-        chart.append( title_text )
+        chart.title = title
+        chart.subtitle = desc
         
-        desc_text = text.Text( desc )
-        desc_text.font_size = "80%"
-        desc_text.translate(105, -15 )
-        chart.append( desc_text )
+        chart.render( self, barsPaint )
+
         
-        chart.append( bars( values ) )
          
 class FibonacciChart(svg.Svg):      
+       def __init__ ( self, title, desc, values, levels, resolution = 1 ):
+        svg.Svg.__init__(self)
+        
+        self.setXmlSpace (True)
+#        self.setId (id)
+        self.setXmlLang ("english")
+        
+        width = 440
+        height = 380
+        
+        layoutMgr = LayoutMgr( width, height )
+
+        layoutMgr.addLayout('plot', 0.1, 0.2, 0.8, 0.6 )
+        layoutMgr.addLayout('title', 0.0, 0.0, 1.0, 0.2 )
+        layoutMgr.addLayout('xlabel', 0.0, 0.1, 0.1, 0.8)
+
+        layoutMgr.addLayout('ylabel', 0.1, 0.8, 0.8, 0.2)
+        
+        # Add gradient
+        plotGradient = LinearGradient()
+        plotGradient.id = "plotGradient"
+        plotGradient.x2 = 0
+        plotGradient.y2 = 1
+
+        plotGradient.append( GradientStop( offset=0.0, stop_color="#889") ) 
+        plotGradient.append( GradientStop( offset=0.5, stop_color="#CCE", stop_opacity=0.5) )
+        self.append( plotGradient )
+
+        # Chart
+        import datetime
+        today = datetime.date.today()
+        start_date = today - datetime.timedelta( days = NUM_DAYS*resolution )
+        
+        tsc = TimeSeriesChart( start_date, today, layoutMgr )
+       
+        # Plot
+        p = Paint ()
+        p.stroke = "blue"
+        p.fill = plotGradient.getURI()
+        
+        values = values.samplePrices( resolution )
+        prices = values.getClosePrices(start_date, today)
+        
+        tsc.addPlot( prices, p )
+        
+        p = Paint ()
+        p.stroke = "gray"
+        p.fill = "none"
+        p.stroke_width = 0.5
+        tsc.render( self, p )
+       
+        """
+        toggle = True
+
+        prob = 0
+        xpos = 10
+        startColor = (0,255,0)
+        endColor = (255, 0, 0)
+        for l in levels:
+            if l[0] > 0:
+                prob += l[1]
+                
+              #  if l[0] > prices[-1]:
+               #     continue
+                    
+                if prob > 5 and prob < 99:
+                    fibo_line = Line()
+                    fibo_line.x1 = 0
+                    fibo_line.x2 = len(prices)*scalex
+                    fibo_line.y1 = ((l[0]-float(min_price))*float(scaley))-height
+                    fibo_line.y2 = ((l[0]-float(min_price))*float(scaley))-height
+                    fibo_line.stroke = interpColor( startColor, endColor, prob )
+                    fibo_line.stroke_width = "0.8"
+                    
+                    plot.append( fibo_line )
+                    
+                    fprob = Decimal(str(prob)).quantize(Decimal("1.0"))
+                    fprice = Decimal(str(l[0])).quantize(Decimal('1.0'))
+                    fibo_prob = text.Text( str(fprob) + "%" + " (" + str(fprice) +")")     
+                    fibo_prob.font_size = "50%"
+                    fibo_prob.font_family= "Verdana"
+                    fibo_prob.stroke = fibo_line.stroke
+                    fibo_prob.stroke_width = "0.5"                         
+                    
+                    ypos = fibo_line.y1 * 0.99
+                    
+                    fibo_prob.scale(1,-1)
+                    plot.append( Label(fibo_prob,(xpos,ypos),0) )
+                    
+                    xpos += 30
+        
+        """
+       
+
+class FibonacciChartOld(svg.Svg):      
        def __init__ ( self, title, desc, values, levels, resolution = 1 ):
         svg.Svg.__init__(self)
         
@@ -155,7 +194,6 @@ class FibonacciChart(svg.Svg):
         values = values.samplePrices( resolution )
         prices = values.getClosePrices(start_date, today)
         
-        print prices
         
         min_price = min(prices)
         max_price = max(prices)
@@ -295,7 +333,7 @@ class FibonacciChart(svg.Svg):
         grid = Grid( Viewport(0,0,width,height), date_tick, price_tick, p )
         
         chart.append(grid)
-       
+
 
 def interpColor( startColor, endColor, prob ):
     t = prob / 100.0
