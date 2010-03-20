@@ -33,7 +33,7 @@ class AttrPathData(object):
           
         self.d += str_coords (coords, 2 )
             
-    def closepath ( self ):
+    def close( self ):
         self.d += 'z'
         
     def lineto ( self, coords, relative = False ):
