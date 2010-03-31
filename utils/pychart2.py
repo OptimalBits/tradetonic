@@ -56,7 +56,7 @@ class LayoutMgr:
         return ( x, y, w, h )
     
 class Chart(object):
-    rounders = [ (1,0.1),(5,0.25),(10,1),(20,2.5),(50,5),(100,10),(500,50),(1000,100),(10000,1000) ]
+    rounders = [ (1,0.1),(5,0.5),(10,1),(20,2.5),(50,5),(100,10),(500,50),(1000,100),(10000,1000) ]
     
     def __init__( self, layoutMgr ):
         self.layoutMgr = layoutMgr
@@ -90,14 +90,13 @@ class Chart(object):
         
         if self.grid != None:
             self.grid.render( plot_group, paint )
-
-        if len( self.plots ) > 0:                    
-            for plot in self.plots:
-                plot.render( plot_group )
+                   
+        for plot in self.plots:
+            plot.render( plot_group )
+        print plot_group
         
         xAxis.render( plot_group, paint )
         yAxis.render( plot_group, paint )
-        
         
         svg.append( plot_group )
         
@@ -105,7 +104,7 @@ class Chart(object):
     
         if self.title != None or self.subtitle != None:
             title_layout = self.layoutMgr.getLayout( 'title' )        
-            mid_point = ( title_layout[2] / 2, title_layout[3] / 2 )
+            mid_point = ( title_layout[2] / 2, title_layout[3] / 3 )
             
             text_group = group.Group()
             text_group.translate( title_layout[0], title_layout[1] )
@@ -149,18 +148,18 @@ class Chart(object):
         
 class TimeSeriesChart(Chart):
         
-    def __init__( self, startDate, endDate, layoutMgr ):
+    def __init__( self, startDate, endDate, layoutMgr, useGrid = True ):
         Chart.__init__( self, layoutMgr )
         
+        self.useGrid = useGrid
         self.dateLabels = self.genDateLabels( startDate, endDate )       
-
+        print self.dateLabels
 
     def addPlot( self, data, paint, dates= None ):
     
         if len(self.plots) == 0:
             plotLayout = self.layoutMgr.getLayout( 'plot' )
         
-
             width = int( plotLayout[2] )
             height = int( plotLayout[3] )
         
@@ -171,8 +170,7 @@ class TimeSeriesChart(Chart):
             if len( self.dateLabels ) > 1:
                 xAxis.setTicks( range( 0, len( self.dateLabels ) ) )
         
-            self.xAxis.append( xAxis )
-            
+            self.xAxis.append( xAxis )    
             
             dataAmplitude = max(data) - min(data)
             minData = min(data) - dataAmplitude * 0.15
@@ -187,10 +185,6 @@ class TimeSeriesChart(Chart):
             maxData = self.roundValueCeil( maxData, rounder )
         
             yAxis = Axis( height, minData, maxData, linearFunc, orientation = Axis.Orientation.VERTICAL )
-            
-            print "MinData: " + str(minData)
-            print maxData
-            print dataAmplitude
         
             labels = []
             tick_value = minData
@@ -203,15 +197,16 @@ class TimeSeriesChart(Chart):
         
             self.yAxis.append( yAxis )
             
-                       
-            self.grid = Grid( xAxis, yAxis )
-            self.grid.yGrid = True
+            if self.useGrid: 
+                self.grid = Grid( xAxis, yAxis )
+                self.grid.yGrid = True
 
         xAxis = self.xAxis[0]
         yAxis = self.yAxis[0]
         
-        len_data = len( data ) - 1
-        x_coords = range( 0, len_data * xAxis.length, xAxis.length / len_data )
+        len_data = float (len( data ) )
+        x_coords = [ x * xAxis.length / (len_data-1) for x in range( 0, len_data ) ]
+
         plot = Plot( zip( x_coords, yAxis.transform( data ) ), paint )
 
         self.plots.append( plot )
@@ -464,13 +459,13 @@ class Axis:
     labels = None
     
     def __init__( self, length, min_val = 0, max_val = None, transformFunc = linearFunc, orientation = Orientation.HORIZONTAL, bias = 0.0 ):
-        self.length = length
-        self.min_val = min_val
+        self.length = float(length)
+        self.min_val = float(min_val)
         
         if max_val == None:
             max_val = length
         
-        self.max_val = max_val
+        self.max_val = float(max_val)
             
         self.transformFunc = transformFunc
         self.orientation = orientation
@@ -481,7 +476,6 @@ class Axis:
         self.labels = labels
         
     def setTicks( self, tick_positions ):
-        print tick_positions
         max_pos = max( tick_positions )
         min_pos = min( tick_positions )
         
@@ -503,7 +497,8 @@ class Axis:
         
         tdata = list ()
         for x in data:
-            tdata.append( ( self.transformFunc( x ) - min_data ) * scale + bias )
+            val = ( x - min_data ) * scale + bias
+            tdata.append( self.transformFunc( val ) )
             
         return tdata
         
@@ -733,7 +728,7 @@ def generateMonthlyStrings( startDate, endDate ):
     endMonth = endDate.month
 
     labels = list()
-    while year < endYear or month < endMonth:
+    while year < endYear or month <= endMonth:
         d = date(year, month, 1)
         
         if month == 1:
