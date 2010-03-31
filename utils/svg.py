@@ -30,7 +30,3 @@ def svgdoc ( svg ):
     s += str ( svg )
     return s
     
-    
-    
-    
-    

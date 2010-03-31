@@ -10,3 +10,5 @@ def home ( request, tabs ):
     select_tab( tabs, "Home")
     return render_to_response('tradetonic.html', {'tabs': tabs})
     
+    
+    
