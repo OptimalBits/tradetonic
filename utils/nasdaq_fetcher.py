@@ -135,6 +135,11 @@ class QuoteList(dict):
         else:
             return [q.close for (d,q) in quotes_list]
             
+    def getDates( self ):
+        quotes_list = self.items()
+        quotes_list.sort()
+        return [q.date for (d,q) in quotes_list]
+            
     # Sample prices
     # Approximate a week with 5 days.
     # Approximate a month with 20 days
@@ -193,7 +198,7 @@ class QuoteProxy(object):
         if quotes != None:
             return quotes
         else:
-            quotes = get_ticks( id, strToDate('1980-10-01') )
+            quotes = get_ticks( id, strToDate('1970-10-01') )
             self.cache.put( id, quotes ) 
             return quotes
            
