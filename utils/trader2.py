@@ -1,4 +1,3 @@
-
 #
 # Trader
 #
@@ -16,8 +15,28 @@ MAX_SHORT_ODDS = 10
 ENTER_TRADE_ODDS = 20
 EXIT_TRADE_ODDS = 80
 
-MAX_LOSS = -0.1
-NUM_DAYS = 1000
+#MAX_LOSS = -0.1
+MAX_LOSS = -1
+NUM_DAYS = 10
+
+BUY_STOCK = 0
+SELL_STOCK = 1
+
+class TradePredictor(object):
+    def __init__( self, ticks ):
+        quotes = [ float(r) for r in ticks.getClosePrices() ]
+        self.analysis = QuoteAnalysis("", 16, quotes)
+    
+    def nextTrade( self, odds, quotes ):
+        points = find_last_pattern( quotes )
+        
+        if points == None:
+            return None
+            
+        rl = self.analysis.get_retracements( *points )
+    
+        return findPrice( odds, rl )
+               
 
 class Trader(object):
     def __init__(self, cash, courtage):
@@ -28,44 +47,54 @@ class Trader(object):
         self.top_price = 0
         self.bottom_price = 10000000
     
-    def buy( self, amount, price ):
-        cost = amount * price - self.courtage
+    def buy( self, date, amount, price ):
+    
+        prev_value = self.market_value( self.stock_price )
+        
+        cost = amount * price + self.courtage
         if cost < self.cash:
-            self.cash -= amount * price - self.courtage
+            self.cash -= cost
         else:
             print "NOT ENOUGH MONEY!!"
         
         if self.stock >= 0:
             self.stock_price = ( self.stock_price * self.stock + amount * price ) / ( self.stock + amount )
         
-        
         self.stock += amount
+        self.stock = int(self.stock)
+         
+        earning = int(self.market_value( price ) - prev_value)
+    
+        print date.isoformat() + ": BOUGHT \t" + str(amount) + "\tat " + '%.2f' % price + "\tearning: " + str(earning) + " " + self.info(price)
         
-        print "BOUGHT " + str(amount) + " at " + str(price)
-        self.show_info(price)
-        
-    def sell( self, amount, price ):
+    def sell( self, date, amount, price ):
+        		
+        prev_value = self.market_value( self.stock_price )
+        print self.stock_price
+        print prev_value
         
         self.cash += amount * price - self.courtage
-        
+                        
         if self.stock <= 0:
             self.stock_price = ( self.stock_price * (-self.stock) + amount * price ) / ( -self.stock + amount )
         
         self.stock -= amount
+        self.stock = int(self.stock)
         
-        print "SOLD " + str(amount) + " at " + str(price)         
-        self.show_info(price)
+        earning = int(self.market_value( price ) - prev_value)
         
-    def buy_all( self, price ):
+        print date.isoformat() + ": SOLD   \t" + str(amount) + "\tat " + '%.2f' % price + "\tearning: " + str(earning) + "\t " + self.info(price)
+       
+    def buy_all( self, date, price ):
         amount = int ( (self.cash - self.courtage) / price)
-        self.buy( amount, price )
+        self.buy( date, amount, price )
         
-    def sell_all( self, price ):
-        self.sell( trader.stock, price )
+    def sell_all( self, date, price ):
+        self.sell( date, trader.stock, price )
         
-    def short_all( self, price ):
-        amount = int ( (self.cash - self.courtage) / price)
-        self.sell( amount, price )
+    def short_all( self, date, price ):
+        amount = int ( (self.cash - self.courtage) / price) / 0.2
+        self.sell( date, amount, price )
         
     def earning( self, current_price ):
         if self.stock_price > 0:
@@ -75,12 +104,15 @@ class Trader(object):
         
     def market_value( self, current_price):
         if self.stock > 0:
-            return self.stock * current_price
+            return self.stock * current_price + self.cash
         else:
             return self.cash - (-self.stock) * current_price
       
     def show_info(self, price):
-        print  "Amount: " + str(self.stock) + " Cash: " + str(self.cash) + " Price: " + str(self.stock_price) + " Value: " + str(self.market_value( price ))
+        print  self.info( price )
+                
+    def info(self, price):
+        return "Amount: " + str(self.stock) + "\tCash: " + '%.1f' % self.cash + "\tPrice: " + '%.2f' % self.stock_price + "\tValue: " + '%.2f' % self.market_value( price )
           
     
 def accumulateOdds( rl ):
@@ -108,6 +140,17 @@ def findOdds( price, rl ):
             return t * odds[i] + (1-t)*odds[i+1]
 
     return odds[0]
+    
+    
+def findPrice( odds, rl ):
+    odd_list = accumulateOdds( rl )
+    
+    for i in range( 0, len(odd_list)-1):
+        if odd_list[i] <= odds and odd_list[i+1] >= odds:
+            t = (odds + odd_list[i]) / ( odd_list[i] + odd_list[i+1] )
+            
+            price =  rl[i][0] * ( 1 - t ) + rl[i+1][0] * t
+            return price
         
 
 def calcEarning( paid_price, sold_price ):
@@ -187,21 +230,25 @@ def takeShortProfits( current_price, trader ):
 
 # HERE WE START THE SIMULATION
         
-trader = Trader(100000, 100)
+trader = Trader(30000, 100)
         
 # Simulate trading.
 QUOTE = 'SSE101'
 QUOTE2 = 'SSE366'
 OMXC20 = 'CSEDX0000001376'
-OMXS30 = 'SSESE0000337842'
+OMXS30 = 'SE0000337842'
 
 
 quote_proxy = QuoteProxy( 'quote_cache' )
-ticks = quote_proxy.getTicks( OMXS30 )
+ticks = quote_proxy.getTicks( QUOTE2 )
+
    
 quotes = [ float(r) for r in ticks.getClosePrices() ]
+dates = ticks.getDates()
 
-a = QuoteAnalysis(16, quotes)
+#print dates
+
+a = QuoteAnalysis(QUOTE, 16, quotes)
 #rl = a.get_retracements( *a.last_pattern )
 
 going_up = False
@@ -211,6 +258,7 @@ going_up = False
 """
 for i in range(NUM_DAYS,0,-1):   
     new_quotes = quotes[:-i]
+    new_dates = dates[:-i]
 
     points = find_last_pattern( new_quotes )
     
@@ -218,6 +266,7 @@ for i in range(NUM_DAYS,0,-1):
         continue
     
     current_price = new_quotes[-1:][0]
+    current_date = new_dates[-1:][0]
     
     if points[0] < points[1]:
         if going_up == False:
@@ -248,8 +297,9 @@ for i in range(NUM_DAYS,0,-1):
                 # Sell if loss > MAX_LOSS from top_price
                 earning = calcEarning( trader.top_price, current_price )
                 if earning < MAX_LOSS:
-                    print "TAKING A LOSS: " + str(earning)
-                    trader.sell_all( current_price )
+                    #print "TAKING A LOSS: " + str(earning)
+                    trader.sell_all( trader.top_price * ( 1 + MAX_LOSS) )
+                    #trader.sell_all( current_price )
         else:
             if not going_up:
                 
@@ -259,7 +309,7 @@ for i in range(NUM_DAYS,0,-1):
                     
                 if odds > MIN_EXIT_ODDS:
                     print "EXIT SHORT TRADE"
-                    print "ENTERD LONG TRADE HOPING REVERSAL WITH ODDS: " + str(odds)
+                    print "ENTERED LONG TRADE HOPING REVERSAL WITH ODDS: " + str(odds)
                     trader.buy_all( current_price )
                     trader.top_price = current_price
                 
@@ -269,7 +319,7 @@ for i in range(NUM_DAYS,0,-1):
                 earning = calcEarning( current_price, trader.bottom_price )
                 if earning < MAX_LOSS:
                     print "TAKING A LOSS: " + str(earning)
-                    trader.buy_all( current_price )
+                    trader.buy_all( trader.bottom_price * ( 1 + MAX_LOSS) )
                     trader.top_price = current_price
                 
     if trader.stock == 0:
@@ -308,11 +358,13 @@ for i in range(NUM_DAYS,0,-1):
   
 print "Final Amount: " + str(trader.market_value(current_price))
 """        
-        
-        
+"""
 # simulate trading
-for i in range(NUM_DAYS,0,-1):   
+
+for i in range(NUM_DAYS,0,-1):
     new_quotes = quotes[:-i]
+    new_dates = dates[:-i]
+
 
     points = find_last_pattern( new_quotes )
     
@@ -320,6 +372,7 @@ for i in range(NUM_DAYS,0,-1):
         continue
     
     current_price = points[3]
+    current_date = new_dates[-1:][0]
     
     if points[0] < points[1]:
         if going_up == False:
@@ -342,24 +395,25 @@ for i in range(NUM_DAYS,0,-1):
                 odds = findOdds( current_price, rl )
            
                 if odds > MIN_EXIT_ODDS:
-                    trader.sell_all( current_price )
+                    trader.sell_all( current_date, current_price )
                 
                 trader.top_price = max( trader.top_price, current_price )
             else:
                 # Sell if loss > MAX_LOSS from top_price
                 earning = calcEarning( trader.top_price, current_price )
                 if earning < MAX_LOSS:
-                    print "TAKING A LOSS: " + str(earning)
-                    trader.sell_all( current_price )
+                    #print str(current_date) + ": TAKING A LOSS: " + str(earning)
+                    trader.sell_all( current_date, trader.top_price * 0.99 )
         else:
             if not going_up:
                 rl = a.get_retracements( *points )
                 odds = findOdds( current_price, rl )
                     
                 if odds > MIN_EXIT_ODDS:
-                    print "EXIT SHORT TRADE"
-                    print "ENTERED LONG TRADE HOPING REVERSAL WITH ODDS: " + str(odds)
-                    trader.buy_all( current_price )
+                    print str(current_date) + ": "
+                    #print "EXIT SHORT TRADE"
+                    #print "ENTERED LONG TRADE HOPING REVERSAL WITH ODDS: " + str(odds)
+                    trader.buy_all( current_date, current_price )
                     trader.top_price = current_price
                 
                 trader.bottom_price = min( trader.bottom_price, current_price )
@@ -367,8 +421,7 @@ for i in range(NUM_DAYS,0,-1):
                 # Buy if loss > MAX_LOSS from top_price
                 earning = calcEarning( current_price, trader.bottom_price )
                 if earning < MAX_LOSS:
-                    print "TAKING A LOSS: " + str(earning)
-                    trader.buy_all( current_price )
+                    trader.buy_all( current_date, trader.bottom_price * 1.01 )
                     trader.top_price = current_price
                 
     if trader.stock == 0:
@@ -377,36 +430,142 @@ for i in range(NUM_DAYS,0,-1):
             odds = findOdds( current_price, rl )
                         
             if odds < ENTER_TRADE_ODDS:
-                print "ENTER A LONG TRADE WITH ODDS: " + str(odds)
+                #print str(current_date) + ": ENTER A LONG TRADE WITH ODDS: " + str(odds)
             
-                trader.buy_all( current_price )
+                trader.buy_all( current_date, current_price )
                 trader.top_price = current_price
-            """  
+         #    
             elif odds > EXIT_TRADE_ODDS:
-                print "ENTER A SHORT TRADE HOPING REVERSAL WITH ODDS: " + str(odds)
-                trader.short_all( current_price )
+                #print str(current_date) + ": ENTER A SHORT TRADE HOPING REVERSAL WITH ODDS: " + str(odds)
+                trader.short_all( current_date, current_price )
                 trader.bottom_price = current_price
-            """    
+          #  
         elif points != None:
            
             rl = a.get_retracements( *points ) 
             odds = findOdds( current_price, rl )
-            """ 
+          #  
             if odds > EXIT_TRADE_ODDS:
-                print "ENTER A LONG TRADE HOPING REVERSAL WITH ODDS: " + str(odds)
-            
+                #print str(current_date) + ": ENTER A LONG TRADE HOPING REVERSAL WITH ODDS: " + str(odds)           
                 trader.buy_all( current_price )
                 trader.top_price = current_price
-            """
+           # 
             if odds < ENTER_TRADE_ODDS:
-                print "ENTER A SHORT TRADE WITH ODDS: " + str(odds)
+                #print str(current_date) + ": ENTER A SHORT TRADE WITH ODDS: " + str(odds)
             
-                trader.short_all( current_price )
+                trader.short_all( current_date, current_price )
+                trader.bottom_price = current_price
+"""
+    
+    
+predictor = TradePredictor( ticks )
+
+# simulate trading
+for i in range(NUM_DAYS,-1,-1):
+    if i > 0:
+        new_quotes = quotes[:-i]
+        new_dates = dates[:-i]
+    else:
+        new_quotes = quotes
+        new_dates = dates
+
+    current_date = new_dates[-1:][0]
+    
+    tick = ticks[current_date]
+    #print tick
+    
+    points = find_last_pattern( new_quotes )
+    
+    if points == None:
+        continue
+   
+    current_price = points[3]
+    
+    if points[0] < points[1]:
+        if going_up == False:
+            reversal = True
+        else:
+            reversal = False
+        going_up = True
+            
+    if points[0] > points[1]:
+        if going_up == True:
+            reversal = True
+        else:
+            reversal = False
+        going_up = False
+        
+    price_enter = predictor.nextTrade( ENTER_TRADE_ODDS, new_quotes )
+    price_exit = predictor.nextTrade( EXIT_TRADE_ODDS, new_quotes )
+    price = price = predictor.nextTrade( MIN_EXIT_ODDS, new_quotes )
+    
+    print "Current price: " + str(current_price)
+    
+    if going_up:
+        if price_enter != None:
+            print "Next enter long price: " + '%.2f' % price_enter
+        
+        if price_exit != None:
+            print "Next enter short price: " + '%.2f' % price_exit
+    else:
+        if price_enter != None:
+            print "Next enter short price: " + '%.2f' % price_enter
+    
+    if price != None:
+        print "Next exit price: " + '%.2f' % price
+    
+    low = tick.low
+    high = tick.high
+ 
+    if trader.stock != 0:
+        if trader.stock > 0:
+            if going_up:     
+          #      if price <= current_price:
+          #          trader.sell_all( current_date, current_price )
+                
+                trader.top_price = max( trader.top_price, high )
+            else:
+                earning = calcEarning( trader.top_price, low )
+                
+                if earning < MAX_LOSS:
+                    sell_price = min( trader.top_price * 0.99, high )
+                    trader.sell_all( current_date, sell_price )
+        else:
+            if not going_up:  
+          #      if price >= current_price:  
+          #          trader.buy_all( current_date, current_price )
+          #          trader.top_price = current_price
+                
+                trader.bottom_price = min( trader.bottom_price, low )
+            else:
+                earning = calcEarning( high, trader.bottom_price )
+                
+                if earning < MAX_LOSS:
+                    buy_price = max( trader.bottom_price * 1.01, low )
+                    trader.buy_all( current_date, buy_price )
+                    trader.top_price = current_price
+                
+    if trader.stock == 0:
+        if going_up:                 
+            if price_enter <= current_price:
+                trader.buy_all( current_date, current_price )
+                trader.top_price = current_price
+            
+            elif price_exit >= current_price:
+                trader.short_all( current_date, current_price )
+                trader.bottom_price = current_price
+        elif points != None:
+            if price_enter >= current_price:            
+                trader.short_all( current_date, current_price )
                 trader.bottom_price = current_price
 
-  
-print "Final Amount: " + str(trader.market_value(current_price))    
+    
        
+
+
+
+
+
 
 
 
