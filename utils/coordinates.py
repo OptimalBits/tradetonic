@@ -2,6 +2,13 @@
 from attribute import *
 
 
+class AttrViewbox( object ):
+    def __init__( self, viewBox = None ):
+        self.viewBox = viewBox
+    def __str__ ( self ):
+        return str_attr ( 'viewBox', self.viewBox )
+
+
 class AttrX(object):
     def __init__ ( self ):
         self.x = None

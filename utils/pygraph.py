@@ -7,6 +7,9 @@ import text
 import paint
 import utils
 import rect
+
+from ticks import *
+
 from datetime import *
 
 from paint import *
@@ -52,7 +55,7 @@ class Container(group.Group):
 
 
 class Chart(Container):
-    def __init__ ( self, viewport, axis ):
+    def __init__( self, viewport, axis ):
         Container.__init__(self, viewport)
         
         self.matrix ( 1, 0, 0, -1, 0, 0 )
@@ -66,6 +69,10 @@ class Chart(Container):
     #        p.stroke = "#808080"
         
     #        self.append( Grid( viewport, axis[0].tickInterval, axis[1].tickInterval, p ) )
+
+class Frame(Object):
+	def __init__( self ):
+		pass
 
 
 class BarsChart(Chart):
@@ -145,6 +152,7 @@ class Plot (group.Group):
         
         self.append ( p )
         
+        
 #
 # Draws a grid
 # area ( x0,y0, w, h )
@@ -179,36 +187,8 @@ class Grid(Object):
             y += gh
             self.append (h)
             
-class Tick(group.Group):
-    def __init__ (self):
-        group.Group.__init__ (self)
-        l = line.Line ()
-        l.x1 = 0
-        l.y1 = -3
-        l.x2 = 0
-        l.y2 = 3
-        
-        self.append ( l )
-            
-class Ticks(group.Group):
-    def __init__ (self, length, interval, tick = None):
-        group.Group.__init__( self )
-        if tick == None:
-            tick = Tick
-        
-        for t in self.ticks( length, interval, tick ):
-            self.append( t )
-            
-    def ticks( self, length, interval, tick ):
-        numTicks = int( length / interval ) + 1
-        x = 0
-        for t in range (0,numTicks):
-            new_tick = tick()
-            new_tick.translate ( x, 0 )
-            x += interval
-            yield new_tick
-            
 
+           
 class Leyend(object):
     pass
       
@@ -353,6 +333,7 @@ class Bar(group.Group):
         
         self.append( r )
          
+
 class Histogram(object):
     def __init__( self, values, numBins ):
         self.hist = [ 0 for x in range(length(values)) ]
@@ -370,5 +351,15 @@ def datetimeIterator(from_date=datetime.now(), to_date=None, delta=timedelta(min
         from_date = from_date + delta
     return
 
+
+
+def LineChart(Chart):
+	def __init__( self, data_pairs ):
+		pass
+
+	
+            
+            
+            
             
 

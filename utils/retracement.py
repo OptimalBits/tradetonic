@@ -343,7 +343,19 @@ def find_last_pattern( quotes ):
         return ( p1, p2, p3, p4, trend )
     else:
         return None
-        
+  
+  
+def find_last_pattern2( quotes ):
+    found = False
+    
+    for ( p1, p2, p3, p4 ) in find_N_pattern2( quotes ):
+        found = True
+        pass
+    
+    if found:
+        return ( p1, p2, p3, p4 )
+    else:
+        return None      
         
 def find_V_pattern( quotes ):    
     state = 0
@@ -423,7 +435,48 @@ def get_bargains( analysis_list ):
     return bargains
     
  
-    
+def find_N_pattern2( quotes ):    
+    state = 0
+    i = 0
+      
+    while i < len(quotes):
+        val = quotes[i]
+        
+        if state == 0:
+            p1 = ( val, i )
+            state = 1
+            
+        elif state == 1:
+            p2 = ( val, i )
+            state = 2
+                
+        elif state == 2:
+            if ( p1[0] < p2[0] and val < p2[0] ) or ( p1[0] > p2[0] and val > p2[0] ): 
+                p3 = ( val, i )
+                state = 3
+            else:
+                p2 = ( val, i )
+                
+        elif state == 3:
+            if ( p2[0] < p3[0] and val < p3[0] ) or ( p2[0] > p3[0] and val > p3[0] ):
+                p4 = ( val, i )
+                state = 4
+            else:
+                p3 = ( val, i )
+                
+        elif state == 4:
+            if (p3[0] < p4[0] and val < p4[0]) or (p3[0] > p4[0] and val > p4[0]):                
+                yield ( p1, p2, p3, p4 )
+                   
+                p1 = p2
+                p2 = p3
+                p3 = p4
+            p4 = ( val, i )
+        
+        i = i + 1
+          
+    if state >= 3:
+        yield ( p1, p2, p3, (val, i) )
     
     
     

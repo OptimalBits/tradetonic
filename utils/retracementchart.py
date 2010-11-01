@@ -6,6 +6,7 @@ from text import *
 from pygraph import *
 from retracement import *
 from line import *
+from marker import *
 from decimal import Decimal
 
 from gradient import *
@@ -94,7 +95,7 @@ class retracementPatternChart(svg.Svg):
 
          
 class FibonacciChart(svg.Svg):      
-       def __init__ ( self, title, desc, values, levels, resolution = 1 ):
+       def __init__ ( self, title, desc, values, levels, resolution = 1, pattern = None ):
         svg.Svg.__init__(self)
         
         self.setXmlSpace (True)
@@ -139,13 +140,44 @@ class FibonacciChart(svg.Svg):
         prices = values.getClosePrices(start_date, today)
         
         tsc.addPlot( prices, p )
+        
+        if pattern != None:
+            a = zip(*pattern)[0]
+            b = zip(*pattern)[1]
+            p = Paint( stroke="green",stroke_width=2, stroke_dasharray = "3" )
+            
+            print p
+            
+            bias = b[-1] - len(prices)
+            
+            marker = Marker(id="Arrow")
+
+            arrow = Path()
+            arrow.moveto((0,0))
+            arrow.lineto((10,5))
+            arrow.lineto((0,10))
+            arrow.close()
+
+            marker.refX = 0
+            marker.refY = 5
+            marker.markerUnits="strokeWidth"
+            marker.markerHeight=3
+            marker.markerWidth=4
+            marker.orient = "auto"
+            marker.viewBox = "0 0 10 10"
+            marker.append( arrow )
+            
+            self.append( marker )
+            
+            tsc.addPlot( a, p, pos = [ x-bias for x in b ], endMarker = marker )
+        
         min_price = min(prices)
         max_price = max(prices)
         last_price = prices[-1]
         going_short = levels[0][0] > levels[1][0]
 
         p2 = Paint ()
-       # p2.stroke_dasharray = "2"
+      # p2.stroke_dasharray = "2"
         
         prob = 0
         xpos = 10
@@ -155,7 +187,7 @@ class FibonacciChart(svg.Svg):
             if l[0] > 0:
                 prob += l[1]
                              
-                if (going_short and last_price >= l[0]) or ( not going_short and last_price <= l[0]):
+                if (going_short and last_price >= l[0]) or ( not going_short and last_price <= l[0] ):
                     p2.stroke = interpColor( startColor, endColor, prob )
                     tsc.addPlot( [l[0],l[0]], p2 )
                 

@@ -9,7 +9,7 @@ from retracement import *
 svg = Svg ()
 
 svg.setXmlSpace (True)
-svg.setId ("Retracement Levels")
+svg.id =  "Retracement Levels"
 svg.setXmlLang ("english")
 
 svg.width = 1000

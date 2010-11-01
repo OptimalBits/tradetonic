@@ -4,6 +4,8 @@ from utils import *
 from core import Core
 from coordinates import *
 from paint import Paint
+from marker import AttrMarker
+
 
 # note: num_coords is just used as a constraint.
 def str_coords ( coords, num_coords ):
@@ -96,6 +98,7 @@ class AttrPathData(object):
         
 class Path( Core, 
             Paint,
+            AttrMarker,
             AttrPathData ):
 
     def __init__(self):

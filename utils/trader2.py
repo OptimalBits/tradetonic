@@ -12,19 +12,19 @@ MIN_EXIT_ODDS = 100
 MAX_LONG_ODDS = 10
 MAX_SHORT_ODDS = 10
 
-ENTER_TRADE_ODDS = 20
-EXIT_TRADE_ODDS = 80
+ENTER_TRADE_ODDS = 45
+EXIT_TRADE_ODDS = 65
 
 #MAX_LOSS = -0.1
 MAX_LOSS = -1
-NUM_DAYS = 10
+NUM_DAYS = 150
 
 BUY_STOCK = 0
 SELL_STOCK = 1
 
 class TradePredictor(object):
-    def __init__( self, ticks ):
-        quotes = [ float(r) for r in ticks.getClosePrices() ]
+    def __init__( self, quotes ):
+        #quotes = [ float(r) for r in ticks.getClosePrices() ]
         self.analysis = QuoteAnalysis("", 16, quotes)
     
     def nextTrade( self, odds, quotes ):
@@ -70,8 +70,6 @@ class Trader(object):
     def sell( self, date, amount, price ):
         		
         prev_value = self.market_value( self.stock_price )
-        print self.stock_price
-        print prev_value
         
         self.cash += amount * price - self.courtage
                         
@@ -458,7 +456,8 @@ for i in range(NUM_DAYS,0,-1):
 """
     
     
-predictor = TradePredictor( ticks )
+#predictor = TradePredictor( ticks )
+show_indicator = True
 
 # simulate trading
 for i in range(NUM_DAYS,-1,-1):
@@ -469,18 +468,18 @@ for i in range(NUM_DAYS,-1,-1):
         new_quotes = quotes
         new_dates = dates
 
+    predictor = TradePredictor( new_quotes )
     current_date = new_dates[-1:][0]
     
     tick = ticks[current_date]
-    #print tick
+    print tick
     
+    new_quotes = new_quotes[:-1]
     points = find_last_pattern( new_quotes )
     
     if points == None:
         continue
    
-    current_price = points[3]
-    
     if points[0] < points[1]:
         if going_up == False:
             reversal = True
@@ -497,23 +496,17 @@ for i in range(NUM_DAYS,-1,-1):
         
     price_enter = predictor.nextTrade( ENTER_TRADE_ODDS, new_quotes )
     price_exit = predictor.nextTrade( EXIT_TRADE_ODDS, new_quotes )
-    price = price = predictor.nextTrade( MIN_EXIT_ODDS, new_quotes )
     
-    print "Current price: " + str(current_price)
-    
-    if going_up:
+    min_price = min( price_enter, price_exit )
+    max_price = max( price_enter, price_exit )
+        
+    if show_indicator:
         if price_enter != None:
-            print "Next enter long price: " + '%.2f' % price_enter
+            print "Next buying price: " + '%.2f' % min_price
         
         if price_exit != None:
-            print "Next enter short price: " + '%.2f' % price_exit
-    else:
-        if price_enter != None:
-            print "Next enter short price: " + '%.2f' % price_enter
-    
-    if price != None:
-        print "Next exit price: " + '%.2f' % price
-    
+            print "Next sell price: " + '%.2f' % max_price
+        
     low = tick.low
     high = tick.high
  
@@ -543,24 +536,65 @@ for i in range(NUM_DAYS,-1,-1):
                 if earning < MAX_LOSS:
                     buy_price = max( trader.bottom_price * 1.01, low )
                     trader.buy_all( current_date, buy_price )
-                    trader.top_price = current_price
+                    trader.top_price = buy_price
                 
     if trader.stock == 0:
-        if going_up:                 
-            if price_enter <= current_price:
-                trader.buy_all( current_date, current_price )
-                trader.top_price = current_price
+        
+        if going_up:
+            if low <= max_price <= high:
+                trader.short_all( current_date, max_price )
+                trader.bottom_price = max_price    
+            elif low <= min_price <= high:
+                trader.buy_all( current_date, min_price )
+                trader.top_price = min_price
+        else:
+            if low <= min_price <= high:
+                trader.buy_all( current_date, min_price )
+                trader.top_price = min_price
+            elif low <= max_price <= high:
+                trader.short_all( current_date, max_price )
+                trader.bottom_price = max_price
             
-            elif price_exit >= current_price:
-                trader.short_all( current_date, current_price )
-                trader.bottom_price = current_price
-        elif points != None:
-            if price_enter >= current_price:            
-                trader.short_all( current_date, current_price )
-                trader.bottom_price = current_price
-
-    
        
+       
+        #if current_price >= max_price:
+        #    trader.short_all( current_date, current_price )
+        #    trader.bottom_price = current_price    
+        #elif current_price <= min_price:
+        #    trader.buy_all( current_date, current_price )
+        #    trader.top_price = current_price
+       
+        
+    #    if going_up:                 
+     #       if price_enter >= current_price:
+      #          trader.buy_all( current_date, current_price )
+       #         trader.top_price = current_price
+            
+        #    elif price_exit <= current_price:
+         #       trader.short_all( current_date, current_price )
+          #      trader.bottom_price = current_price
+        #elif points != None:
+         #   if price_exit <= current_price:
+          #      trader.short_all( current_date, current_price )
+           #     trader.bottom_price = current_price
+            
+           # elif price_enter >= current_price:
+            #    trader.buy_all( current_date, current_price )
+             #   trader.top_price = current_price
+                
+            #if price_exit <= current_price:            
+            #    trader.short_all( current_date, current_price )
+            #    trader.bottom_price = current_price
+
+price_enter = predictor.nextTrade( ENTER_TRADE_ODDS, quotes )
+price_exit = predictor.nextTrade( EXIT_TRADE_ODDS, quotes )
+    
+min_price = min( price_enter, price_exit )
+max_price = max( price_enter, price_exit )
+        
+if show_indicator:
+    print "Next buying price: " + '%.2f' % min_price
+    print "Next sell price: " + '%.2f' % max_price
 
 
 

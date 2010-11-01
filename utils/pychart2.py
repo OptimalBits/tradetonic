@@ -93,7 +93,6 @@ class Chart(object):
                    
         for plot in self.plots:
             plot.render( plot_group )
-        print plot_group
         
         xAxis.render( plot_group, paint )
         yAxis.render( plot_group, paint )
@@ -153,9 +152,8 @@ class TimeSeriesChart(Chart):
         
         self.useGrid = useGrid
         self.dateLabels = self.genDateLabels( startDate, endDate )       
-        print self.dateLabels
-
-    def addPlot( self, data, paint, dates= None ):
+        
+    def addPlot( self, data, paint, dates= None, pos = None, startMarker = None, midMarker = None, endMarker = None ):
     
         if len(self.plots) == 0:
             plotLayout = self.layoutMgr.getLayout( 'plot' )
@@ -204,10 +202,13 @@ class TimeSeriesChart(Chart):
         xAxis = self.xAxis[0]
         yAxis = self.yAxis[0]
         
-        len_data = float (len( data ) )
-        x_coords = [ x * xAxis.length / (len_data-1) for x in range( 0, len_data ) ]
+        if pos == None:
+            len_data = float (len( data ) )
+            x_coords = [ x * xAxis.length / (len_data-1) for x in range( 0, len_data ) ]
+        else:
+            x_coords = [ x * xAxis.length / (max(pos)-1) for x in pos ]
 
-        plot = Plot( zip( x_coords, yAxis.transform( data ) ), paint )
+        plot = Plot( zip( x_coords, yAxis.transform( data ) ), paint, startMarker, midMarker, endMarker )
 
         self.plots.append( plot )
          
@@ -638,9 +639,13 @@ class Plot:
     shadow = True
     point_type = None
 
-    def __init__( self, coords, paint ):
+    def __init__( self, coords, paint, startMarker = None, midMarker = None, endMarker = None ):
         self.coords = coords
         self.paint = paint
+        self.startMarker = startMarker
+        self.midMarker = midMarker
+        self.endMarker = endMarker
+        
         
     def render( self, svg ):
       
@@ -656,7 +661,7 @@ class Plot:
             p.moveto ( [ (c[0],c[1]-(shadow_paint.stroke_width-1)) for c in self.coords ] )
             plot_line.append( p )
         
-        if self.paint.fill != None:
+        if self.paint.fill != None and self.paint.fill.upper != "NONE":
             paint = Paint( fill = self.paint.fill )
             p = path.Path ()    
             p.moveto ( self.coords )
@@ -671,7 +676,17 @@ class Plot:
         
         paint.fill = "None"
         
-        p = path.Path()    
+        p = path.Path() 
+        
+        if self.startMarker != None:
+            p.marker_start = self.startMarker.getURI()
+        
+        if self.midMarker != None:
+            p.marker_mid = self.midMarker.getURI()
+        
+        if self.endMarker != None:
+            p.marker_end = self.endMarker.getURI()
+
         p.moveto( self.coords )
     
         utils.copy_object( paint, p )
@@ -682,13 +697,6 @@ class Plot:
         plot_points = group.Group()
         utils.copy_object ( paint, plot_points )
         plot_points.fill = plot_points.stroke
-        
-        if self.point_type != None:
-            for coord in self.coords:
-                point = Point( coord, POINT_SIZE, self.point_type )
-            
-                point.render( plot_points )
-            svg.append( plot_points )
                 
 class Point:
     class Type:
